@@ -53,6 +53,7 @@ dependencies:
   # https://github.com/dask/s3fs/issues/514
   - s3fs>=2021.8.0
   - crick
+  - curl=8.0
   - cytoolz
   - distributed
   - ipython
@@ -64,9 +65,9 @@ dependencies:
   - numba
   - psutil
   - requests
-  - scikit-image
+  - scikit-image<0.20
   - scikit-learn
-  - scipy
+  - scipy=1.9.1
   - python-snappy
   - sparse
   - cachey
