@@ -53,7 +53,7 @@ dependencies:
   # https://github.com/dask/s3fs/issues/514
   - s3fs>=2021.8.0
   - crick
-  - curl=7.88.1
+  - curl=8.0
   - cytoolz
   - distributed
   - ipython
