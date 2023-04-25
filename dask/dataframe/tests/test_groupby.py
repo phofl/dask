@@ -24,7 +24,10 @@ from dask.dataframe._compat import (
 )
 from dask.dataframe._pyarrow import to_pyarrow_string
 from dask.dataframe.backends import grouper_dispatch
-from dask.dataframe.groupby import NUMERIC_ONLY_NOT_IMPLEMENTED
+from dask.dataframe.groupby import (
+    NUMERIC_ONLY_IMPLEMENTED,
+    NUMERIC_ONLY_NOT_IMPLEMENTED,
+)
 from dask.dataframe.utils import (
     assert_dask_graph,
     assert_eq,
@@ -3288,14 +3291,6 @@ def test_groupby_cov_non_numeric_grouping_column():
     assert_eq(ddf.groupby("b").cov(), pdf.groupby("b").cov())
 
 
-@pytest.mark.skipif(not PANDAS_GT_150, reason="requires pandas >= 1.5.0")
-def test_groupby_numeric_only_None_column_name():
-    df = pd.DataFrame({"a": [1, 2, 3], None: ["a", "b", "c"]})
-    ddf = dd.from_pandas(df, npartitions=1)
-    with pytest.raises(NotImplementedError):
-        ddf.groupby(lambda x: x).mean(numeric_only=False)
-
-
 @pytest.mark.skipif(not PANDAS_GT_140, reason="requires pandas >= 1.4.0")
 @pytest.mark.parametrize("shuffle", [True, False])
 def test_dataframe_named_agg(shuffle):
@@ -3570,6 +3565,51 @@ def test_groupby_numeric_only_supported(func, numeric_only):
         if successful_compute:
             # expected is None if an error was raised
             assert_eq(expected, result)
+
+
+@pytest.mark.parametrize("func", NUMERIC_ONLY_IMPLEMENTED)
+def test_groupby_numeric_only_implemented(func):
+    df = pd.DataFrame({"A": [1, 1, 2], "B": [3, 4, 3], "C": ["a", "b", "c"]})
+    ddf = dd.from_pandas(df, npartitions=3)
+
+    if PANDAS_GT_150 and not PANDAS_GT_200:
+        # Start warning about upcoming change to `numeric_only` default value
+        ctx = pytest.warns(FutureWarning, match="The default value of numeric_only")
+    else:
+        ctx = pytest.warns(None)
+
+    if not PANDAS_GT_150:
+        err = NotImplementedError
+    else:
+        err = TypeError
+
+    if PANDAS_GT_150:
+        with ctx:
+            with pytest.raises(err, match="Could not convert"):
+                getattr(ddf.groupby("A"), func)()
+        with ctx:
+            with pytest.raises(err, match="Could not convert"):
+                getattr(df.groupby("A"), func)()
+    else:
+        with ctx:
+            ddf_result = getattr(ddf.groupby("A"), func)()
+        with ctx:
+            pdf_result = getattr(df.groupby("A"), func)()
+        assert_eq(pdf_result, ddf_result)
+
+    with pytest.raises(err, match="Could not convert|is not implemented in Dask"):
+        getattr(ddf.groupby("A"), func)(numeric_only=False)
+    if PANDAS_GT_150:
+        with pytest.raises(err, match="Could not convert"):
+            getattr(df.groupby("A"), func)(numeric_only=False)
+
+    if PANDAS_GT_150:
+        ddf_result = getattr(ddf.groupby("A"), func)(numeric_only=True)
+        pdf_result = getattr(df.groupby("A"), func)(numeric_only=True)
+        assert_eq(ddf_result, pdf_result)
+    else:
+        with pytest.raises(err, match="is not implemented in Dask"):
+            getattr(ddf.groupby("A"), func)(numeric_only=True)
 
 
 @pytest.mark.parametrize("func", NUMERIC_ONLY_NOT_IMPLEMENTED)

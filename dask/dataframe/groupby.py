@@ -93,11 +93,12 @@ NUMERIC_ONLY_NOT_IMPLEMENTED = [
     "cov",
     "cumprod",
     "cumsum",
-    "mean",
     "median",
     "std",
     "var",
 ]
+
+NUMERIC_ONLY_IMPLEMENTED = ["mean"]
 
 
 def _determine_levels(by):
@@ -348,7 +349,10 @@ def numeric_only_not_implemented(func):
                     raise NotImplementedError(
                         "'numeric_only=False' is not implemented in Dask."
                     )
-                if not self._all_numeric():
+                if (
+                    not self._all_numeric()
+                    and func.__name__ not in NUMERIC_ONLY_IMPLEMENTED
+                ):
                     if numeric_only is False or (
                         PANDAS_GT_200 and numeric_only is no_default
                     ):
@@ -1962,9 +1966,18 @@ class _GroupBy:
     def mean(
         self, split_every=None, split_out=1, shuffle=None, numeric_only=no_default
     ):
+        if numeric_only is no_default and PANDAS_GT_200:
+            numeric_only = False
+
+        self._meta_nonempty.mean(numeric_only=numeric_only)
         # We sometimes emit this warning ourselves. We ignore it here so users only see it once.
         with check_numeric_only_deprecation():
-            s = self.sum(split_every=split_every, split_out=split_out, shuffle=shuffle)
+            s = self.sum(
+                split_every=split_every,
+                split_out=split_out,
+                shuffle=shuffle,
+                numeric_only=numeric_only,
+            )
         c = self.count(split_every=split_every, split_out=split_out, shuffle=shuffle)
         if is_dataframe_like(s):
             c = c[s.columns]
