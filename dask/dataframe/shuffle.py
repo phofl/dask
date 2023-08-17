@@ -428,7 +428,6 @@ def shuffle(
         compute=compute,
         ignore_index=ignore_index,
     )
-    del df3["_partitions"]
     return df3
 
 
