@@ -320,16 +320,16 @@ def set_partition(
             set_partitions_pre, divisions=divisions, meta=meta
         )
         df2 = df.assign(_partitions=partitions, _index=index)
-    return df2
-    # df3 = rearrange_by_column(
-    #     df2,
-    #     "_partitions",
-    #     max_branch=max_branch,
-    #     npartitions=len(divisions) - 1,
-    #     shuffle=shuffle,
-    #     compute=compute,
-    #     ignore_index=True,
-    # )
+    df3 = rearrange_by_column(
+        df2,
+        "_partitions",
+        max_branch=max_branch,
+        npartitions=len(divisions) - 1,
+        shuffle=shuffle,
+        compute=compute,
+        ignore_index=True,
+    )
+    return df3
     #
     # if not isinstance(index, Series):
     #     df4 = df3.map_partitions(
