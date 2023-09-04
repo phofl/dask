@@ -320,37 +320,37 @@ def set_partition(
             set_partitions_pre, divisions=divisions, meta=meta
         )
         df2 = df.assign(_partitions=partitions, _index=index)
-
-    df3 = rearrange_by_column(
-        df2,
-        "_partitions",
-        max_branch=max_branch,
-        npartitions=len(divisions) - 1,
-        shuffle=shuffle,
-        compute=compute,
-        ignore_index=True,
-    )
-
-    if not isinstance(index, Series):
-        df4 = df3.map_partitions(
-            set_index_post_scalar,
-            index_name=index,
-            drop=drop,
-            column_dtype=df.columns.dtype,
-        )
-    else:
-        df4 = df3.map_partitions(
-            set_index_post_series,
-            index_name=index.name,
-            drop=drop,
-            column_dtype=df.columns.dtype,
-        )
-
-    divisions = methods.tolist(divisions)
-    # None and pd.NA values are not sortable
-    df4.divisions = tuple(i if not pd.isna(i) else np.nan for i in divisions)
-
-    return df4.map_partitions(M.sort_index)
+    return df2
+    # df3 = rearrange_by_column(
+    #     df2,
+    #     "_partitions",
+    #     max_branch=max_branch,
+    #     npartitions=len(divisions) - 1,
+    #     shuffle=shuffle,
+    #     compute=compute,
+    #     ignore_index=True,
+    # )
+    #
+    # if not isinstance(index, Series):
+    #     df4 = df3.map_partitions(
+    #         set_index_post_scalar,
+    #         index_name=index,
+    #         drop=drop,
+    #         column_dtype=df.columns.dtype,
+    #     )
+    # else:
+    #     df4 = df3.map_partitions(
+    #         set_index_post_series,
+    #         index_name=index.name,
+    #         drop=drop,
+    #         column_dtype=df.columns.dtype,
+    #     )
+    #
+    # divisions = methods.tolist(divisions)
+    # # None and pd.NA values are not sortable
+    # df4.divisions = tuple(i if not pd.isna(i) else np.nan for i in divisions)
+    #
+    # return df4.map_partitions(M.sort_index)
 
 
 def shuffle(
