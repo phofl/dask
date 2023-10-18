@@ -1838,7 +1838,7 @@ class ArrowDatasetEngine(Engine):
         **kwargs,
     ) -> pd.DataFrame:
         _kwargs = kwargs.get("arrow_to_pandas", {})
-        _kwargs.update({"use_threads": False, "ignore_metadata": False})
+        _kwargs.update({"use_threads": True, "ignore_metadata": False})
 
         types_mapper = cls._determine_type_mapper(
             dtype_backend=dtype_backend,
