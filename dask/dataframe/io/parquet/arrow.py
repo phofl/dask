@@ -1751,7 +1751,7 @@ class ArrowDatasetEngine(Engine):
                     cols.append(name)
 
             arrow_table = frag.to_table(
-                use_threads=False,
+                use_threads=True,
                 schema=schema,
                 columns=cols,
                 filter=_filters_to_expression(filters) if filters else None,
