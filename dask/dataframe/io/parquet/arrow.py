@@ -253,7 +253,7 @@ def _read_table_from_path(
         if row_groups == [None]:
             return pq.ParquetFile(fil, **pre_buffer).read(
                 columns=columns,
-                use_threads=False,
+                use_threads=True,
                 use_pandas_metadata=True,
                 **read_kwargs,
             )
@@ -261,7 +261,7 @@ def _read_table_from_path(
             return pq.ParquetFile(fil, **pre_buffer).read_row_groups(
                 row_groups,
                 columns=columns,
-                use_threads=False,
+                use_threads=True,
                 use_pandas_metadata=True,
                 **read_kwargs,
             )
