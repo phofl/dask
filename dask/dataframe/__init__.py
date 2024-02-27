@@ -86,7 +86,8 @@ if _dask_expr_enabled():
     # Each time this happens and hits a circular import, we can reload
     # dask.dataframe to update itself until dask-expr is fully initialized.
     # TODO: This can go away when dask-expr is merged into dask
-    except ImportError:
+    except ImportError as e:
+        print(str(e))
         import importlib
 
         import dask.dataframe as dd
