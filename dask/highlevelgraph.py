@@ -719,6 +719,7 @@ class HighLevelGraph(Graph):
         hlg: HighLevelGraph
             Culled high level graph
         """
+        return self
         from dask.layers import Blockwise
 
         keys_set = set(flatten(keys))
