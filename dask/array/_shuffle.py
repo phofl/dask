@@ -6,7 +6,7 @@ import numpy as np
 import toolz
 
 from dask.array.chunk import getitem
-from dask.array.core import Array
+from dask.array.core import Array, unknown_chunk_message
 from dask.base import tokenize
 from dask.highlevelgraph import HighLevelGraph
 
@@ -22,6 +22,26 @@ def shuffle(x, indexer: list[list[int]], axis):
 
 
 def _shuffle(chunks, indexer, axis, out_name, in_name, token):
+
+    if not isinstance(indexer, list) or not all(isinstance(i, list) for i in indexer):
+        raise ValueError("indexer must be a list of lists of positional indices")
+
+    if np.isnan(x.shape).any():
+        raise ValueError(
+            f"Shuffling only allowed with known chunk sizes. {unknown_chunk_message}"
+        )
+
+    if not axis <= len(x.chunks):
+        raise ValueError(
+            f"Axis {axis} is out of bounds for array with {len(x.chunks)} axes"
+        )
+
+    if max(map(max, indexer)) >= sum(x.chunks[axis]):  # type: ignore[arg-type]
+        raise IndexError(
+            f"Indexer contains out of bounds index. Dimension only has {sum(x.chunks[axis])} elements."
+        )
+
+
     average_chunk_size = int(sum(chunks[axis]) / len(chunks[axis]) * 1.25)
 
     # Figure out how many groups we can put into one chunk
@@ -86,15 +106,13 @@ def _shuffle(chunks, indexer, axis, out_name, in_name, token):
                 merge_keys.append(name)
 
             merge_suffix = convert_key(chunk_tuple, new_chunk_idx, axis)
-            if len(merge_keys) > 1:
+            if len(merge_keys) >= 1:
                 merges[(out_name,) + merge_suffix] = (
                     concatenate_arrays,
                     merge_keys,
                     sorter,
                     axis,
                 )
-            elif len(merge_keys) == 1:
-                merges[(out_name,) + merge_suffix] = merge_keys[0]  # type: ignore[assignment]
             else:
                 raise NotImplementedError
 
