@@ -12,7 +12,17 @@ from dask.highlevelgraph import HighLevelGraph
 
 
 def shuffle(x, indexer: list[list[int]], axis):
-    average_chunk_size = int(sum(x.chunks[axis]) / len(x.chunks[axis]) * 1.25)
+    out_name = "shuffle-merge-" + tokenize(x, indexer, axis)
+    layer, chunks = _shuffle(
+        x.chunks, indexer, axis, out_name, x.name, tokenize(x, indexer, axis)
+    )
+    graph = HighLevelGraph.from_collections(out_name, layer, dependencies=[x])
+
+    return Array(graph, out_name, chunks, meta=x)
+
+
+def _shuffle(chunks, indexer, axis, out_name, in_name, token):
+    average_chunk_size = int(sum(chunks[axis]) / len(chunks[axis]) * 1.25)
 
     # Figure out how many groups we can put into one chunk
     current_chunk, new_chunks = [], []  # type: ignore[var-annotated]
@@ -31,24 +41,22 @@ def shuffle(x, indexer: list[list[int]], axis):
     if len(current_chunk) > 0:
         new_chunks.append(current_chunk)
 
-    chunk_boundaries = np.cumsum(x.chunks[axis])
+    chunk_boundaries = np.cumsum(chunks[axis])
 
     # Get existing chunk tuple locations
     chunk_tuples = list(
-        product(*(range(len(c)) for i, c in enumerate(x.chunks) if i != axis))
+        product(*(range(len(c)) for i, c in enumerate(chunks) if i != axis))
     )
 
     intermediates = dict()
     merges = dict()
-    token = tokenize(x, indexer, axis)
     split_name = f"shuffle-split-{token}"
-    merge_name = f"shuffle-merge-{token}"
-    slices = [slice(None)] * len(x.chunks)
+    slices = [slice(None)] * len(chunks)
     split_name_suffixes = count()
 
-    old_blocks = np.empty([len(c) for c in x.chunks], dtype="O")
+    old_blocks = np.empty([len(c) for c in chunks], dtype="O")
     for old_index in np.ndindex(old_blocks.shape):
-        old_blocks[old_index] = (x.name,) + old_index
+        old_blocks[old_index] = (in_name,) + old_index
 
     for new_chunk_idx, new_chunk_taker in enumerate(new_chunks):
         new_chunk_taker = np.array(new_chunk_taker)  # type: ignore[assignment]
@@ -79,28 +87,26 @@ def shuffle(x, indexer: list[list[int]], axis):
 
             merge_suffix = convert_key(chunk_tuple, new_chunk_idx, axis)
             if len(merge_keys) > 1:
-                merges[(merge_name,) + merge_suffix] = (
+                merges[(out_name,) + merge_suffix] = (
                     concatenate_arrays,
                     merge_keys,
                     sorter,
                     axis,
                 )
             elif len(merge_keys) == 1:
-                merges[(merge_name,) + merge_suffix] = merge_keys[0]  # type: ignore[assignment]
+                merges[(out_name,) + merge_suffix] = merge_keys[0]  # type: ignore[assignment]
             else:
                 raise NotImplementedError
 
     layer = toolz.merge(merges, intermediates)
-    graph = HighLevelGraph.from_collections(merge_name, layer, dependencies=[x])
 
-    chunks = []
-    for i, c in enumerate(x.chunks):
+    output_chunks = []
+    for i, c in enumerate(chunks):
         if i == axis:
-            chunks.append(tuple(map(len, new_chunks)))
+            output_chunks.append(tuple(map(len, new_chunks)))
         else:
-            chunks.append(c)
-
-    return Array(graph, merge_name, chunks, meta=x)
+            output_chunks.append(c)
+    return layer, output_chunks
 
 
 def concatenate_arrays(arrs, sorter, axis):

@@ -627,6 +627,23 @@ def take(outname, inname, chunks, index, itemsize, axis=0):
     >>> chunks
     ((1, 3, 3, 1), (2000, 2000), (2000, 2000))
     """
+
+    from dask.array import Array
+
+    if not any(np.isnan(x).any() for x in chunks) and not isinstance(index, Array):
+        from dask.array._shuffle import _shuffle
+
+        average_chunk_size = int(sum(chunks[axis]) / len(chunks[axis]))
+
+        indexer = []
+        for i in range(0, len(index), average_chunk_size):
+            indexer.append(index[i : i + average_chunk_size])
+
+        graph, chunks = _shuffle(
+            chunks, indexer, axis, outname, inname, tokenize(inname, index, axis)
+        )
+        return chunks, graph
+
     from dask.array.core import PerformanceWarning
 
     plan = slicing_plan(chunks[axis], index)
