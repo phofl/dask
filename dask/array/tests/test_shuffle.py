@@ -43,6 +43,7 @@ def test_shuffle_larger_array():
     indexer = list(map(list, indexer))
     take_indexer = list(flatten(indexer))
     assert_eq(arr.shuffle(indexer, axis=1), arr[..., take_indexer, :])
+    assert_eq(arr.shuffle(indexer, axis=1), arr.compute()[..., take_indexer, :])
 
 
 def test_incompatible_indexer(darr):

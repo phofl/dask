@@ -637,7 +637,7 @@ def take(outname, inname, chunks, index, itemsize, axis=0):
 
         indexer = []
         for i in range(0, len(index), average_chunk_size):
-            indexer.append(index[i : i + average_chunk_size])
+            indexer.append(index[i : i + average_chunk_size].tolist())
 
         graph, chunks = _shuffle(
             chunks, indexer, axis, outname, inname, tokenize(inname, index, axis)

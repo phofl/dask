@@ -31,18 +31,18 @@ def _shuffle(chunks, indexer, axis, out_name, in_name, token):
 
     if not axis <= len(chunks):
         raise ValueError(
-            f"Axis {axis} is out of bounds for array with {len(x.chunks)} axes"
+            f"Axis {axis} is out of bounds for array with {len(chunks)} axes"
         )
 
-    if max(map(max, indexer)) >= sum(chunks[axis]):  # type: ignore[arg-type]
+    if max(map(max, indexer)) >= sum(chunks[axis]):
         raise IndexError(
-            f"Indexer contains out of bounds index. Dimension only has {sum(x.chunks[axis])} elements."
+            f"Indexer contains out of bounds index. Dimension only has {sum(chunks[axis])} elements."
         )
 
     average_chunk_size = int(sum(chunks[axis]) / len(chunks[axis]) * 1.25)
 
     # Figure out how many groups we can put into one chunk
-    current_chunk, new_chunks = [], []  # type: ignore[var-annotated]
+    current_chunk, new_chunks = [], []
     for idx in indexer:
         if (
             len(current_chunk) + len(idx) > average_chunk_size
@@ -76,7 +76,7 @@ def _shuffle(chunks, indexer, axis, out_name, in_name, token):
         old_blocks[old_index] = (in_name,) + old_index
 
     for new_chunk_idx, new_chunk_taker in enumerate(new_chunks):
-        new_chunk_taker = np.array(new_chunk_taker)  # type: ignore[assignment]
+        new_chunk_taker = np.array(new_chunk_taker)
         sorter = np.argsort(new_chunk_taker)
         sorted_array = new_chunk_taker[sorter]
         source_chunk_nr, taker_boundary = np.unique(
@@ -112,15 +112,14 @@ def _shuffle(chunks, indexer, axis, out_name, in_name, token):
                 )
             else:
                 raise NotImplementedError
-
-    layer = toolz.merge(merges, intermediates)
-
     output_chunks = []
     for i, c in enumerate(chunks):
         if i == axis:
             output_chunks.append(tuple(map(len, new_chunks)))
         else:
             output_chunks.append(c)
+
+    layer = toolz.merge(merges, intermediates)
     return layer, output_chunks
 
 
