@@ -12,6 +12,10 @@ from dask.highlevelgraph import HighLevelGraph
 
 
 def shuffle(x, indexer: list[list[int]], axis):
+    if np.isnan(x.shape).any():
+        raise ValueError(
+            f"Shuffling only allowed with known chunk sizes. {unknown_chunk_message}"
+        )
     out_name = "shuffle-merge-" + tokenize(x, indexer, axis)
     layer, chunks = _shuffle(
         x.chunks, indexer, axis, out_name, x.name, tokenize(x, indexer, axis)
@@ -22,25 +26,18 @@ def shuffle(x, indexer: list[list[int]], axis):
 
 
 def _shuffle(chunks, indexer, axis, out_name, in_name, token):
-
     if not isinstance(indexer, list) or not all(isinstance(i, list) for i in indexer):
         raise ValueError("indexer must be a list of lists of positional indices")
 
-    if np.isnan(x.shape).any():
-        raise ValueError(
-            f"Shuffling only allowed with known chunk sizes. {unknown_chunk_message}"
-        )
-
-    if not axis <= len(x.chunks):
+    if not axis <= len(chunks):
         raise ValueError(
             f"Axis {axis} is out of bounds for array with {len(x.chunks)} axes"
         )
 
-    if max(map(max, indexer)) >= sum(x.chunks[axis]):  # type: ignore[arg-type]
+    if max(map(max, indexer)) >= sum(chunks[axis]):  # type: ignore[arg-type]
         raise IndexError(
             f"Indexer contains out of bounds index. Dimension only has {sum(x.chunks[axis])} elements."
         )
-
 
     average_chunk_size = int(sum(chunks[axis]) / len(chunks[axis]) * 1.25)
 
