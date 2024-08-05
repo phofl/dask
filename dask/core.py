@@ -43,7 +43,11 @@ def istask(x):
     >>> istask(1)
     False
     """
-    return type(x) is tuple and x and callable(x[0])
+    return type(x) is tuple and x and callable(x[0]) and not x[0] is identity
+
+
+def identity(x):
+    return x
 
 
 def has_tasks(dsk, x):
