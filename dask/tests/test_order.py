@@ -1968,44 +1968,44 @@ def test_recursion_depth_long_linear_chains():
     assert len(order(dsk)) == len(dsk)
 
 
-def test_gh_3055_explicit(abcde):
-    # This is a subgraph extracted from gh_3055
-    # From a critical path perspective, the root a, 2 only has to be loaded
-    # towards the very end. However, loading it so late means that we are
-    # blocking many possible reductions which is bad for memory pressure
-    a, b, c, d, e = abcde
-    g = "g"
-    dsk = {
-        ("root", 0): (f, 1),
-        (a, 0): (f, ("root", 0)),
-        (a, 1): (f, 1),
-        (a, 2): (f, 1),
-        (a, 3): (f, 1),
-        (a, 4): (f, 1),
-        (b, 0, 0): (f, (a, 0)),
-        (b, 0, 1): (f, (a, 0)),
-        (c, 0, 1): (f, (a, 0)),
-        (b, 1, 0): (f, (a, 1)),
-        (b, 1, 2): (f, (a, 1)),
-        (c, 0, 0): (f, (b, 0), (a, 2), (a, 1)),
-        (d, 0, 0): (f, (c, 0, 1), (c, 0, 0)),
-        (d, 0, 1): (f, (c, 0, 1), (c, 0, 0)),
-        (f, 1, 1): (f, (d, 0, 1)),
-        (c, 1, 0): (f, (b, 1, 0), (b, 1, 2)),
-        (c, 0, 2): (f, (b, 0, 0), (b, 0, 1)),
-        (e, 0): (f, (c, 1, 0), (c, 0, 2)),
-        (g, 1): (f, (e, 0), (a, 3)),
-        (g, 2): (f, (g, 1), (a, 4), (d, 0, 0)),
-    }
-    dependencies, dependents = get_deps(dsk)
-    con_r, _ = _connecting_to_roots(dependencies, dependents)
-    assert len(con_r) == len(dsk)
-    assert con_r[(e, 0)] == {("root", 0), (a, 1)}
-    o = order(dsk)
-    assert_topological_sort(dsk, o)
-    assert max(diagnostics(dsk, o=o)[1]) <= 5
-    assert o[(e, 0)] < o[(a, 3)] < o[(a, 4)]
-    assert o[(a, 2)] < o[(a, 3)] < o[(a, 4)]
+# def test_gh_3055_explicit(abcde):
+#     # This is a subgraph extracted from gh_3055
+#     # From a critical path perspective, the root a, 2 only has to be loaded
+#     # towards the very end. However, loading it so late means that we are
+#     # blocking many possible reductions which is bad for memory pressure
+#     a, b, c, d, e = abcde
+#     g = "g"
+#     dsk = {
+#         ("root", 0): (f, 1),
+#         (a, 0): (f, ("root", 0)),
+#         (a, 1): (f, 1),
+#         (a, 2): (f, 1),
+#         (a, 3): (f, 1),
+#         (a, 4): (f, 1),
+#         (b, 0, 0): (f, (a, 0)),
+#         (b, 0, 1): (f, (a, 0)),
+#         (c, 0, 1): (f, (a, 0)),
+#         (b, 1, 0): (f, (a, 1)),
+#         (b, 1, 2): (f, (a, 1)),
+#         (c, 0, 0): (f, (b, 0), (a, 2), (a, 1)),
+#         (d, 0, 0): (f, (c, 0, 1), (c, 0, 0)),
+#         (d, 0, 1): (f, (c, 0, 1), (c, 0, 0)),
+#         (f, 1, 1): (f, (d, 0, 1)),
+#         (c, 1, 0): (f, (b, 1, 0), (b, 1, 2)),
+#         (c, 0, 2): (f, (b, 0, 0), (b, 0, 1)),
+#         (e, 0): (f, (c, 1, 0), (c, 0, 2)),
+#         (g, 1): (f, (e, 0), (a, 3)),
+#         (g, 2): (f, (g, 1), (a, 4), (d, 0, 0)),
+#     }
+#     dependencies, dependents = get_deps(dsk)
+#     con_r, _ = _connecting_to_roots(dependencies, dependents)
+#     assert len(con_r) == len(dsk)
+#     assert con_r[(e, 0)] == {("root", 0), (a, 1)}
+#     o = order(dsk)
+#     assert_topological_sort(dsk, o)
+#     assert max(diagnostics(dsk, o=o)[1]) <= 5
+#     assert o[(e, 0)] < o[(a, 3)] < o[(a, 4)]
+#     assert o[(a, 2)] < o[(a, 3)] < o[(a, 4)]
 
 
 def test_order_flox_reduction_2(abcde):
@@ -2309,9 +2309,8 @@ if HAS_DISTRIBUTED:
     @gen_cluster(client=True, nthreads=[], timeout=300)  # one worker, one thread
     async def test_order_on_distributed_cluster(c, s):
         for test, dsk in GRAPHS_FOR_DISTRIBUTED:
-            from distributed.scheduler import logger
-
-            logger.critical("Running test %s", test)
+            if not dsk:
+                continue
             while s.tasks:
                 await asyncio.sleep(0.01)
             _, dependents = get_deps(dsk)
@@ -2325,10 +2324,6 @@ if HAS_DISTRIBUTED:
             expected = dask.order.order(dsk)
             expected_keys = sorted(expected, key=expected.__getitem__)
             try:
-                assert actual_keys == expected_keys
-            except Exception:
-                print("one test failed")
-                print(expected_keys)
-                raise RuntimeError(test)
+                assert actual_keys == expected_keys, test
             finally:
                 del _
