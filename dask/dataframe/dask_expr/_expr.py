@@ -35,7 +35,6 @@ from dask.dataframe.core import (
     is_dataframe_like,
     is_index_like,
     is_series_like,
-    pd_split,
     safe_head,
     total_mem_usage,
 )
@@ -469,7 +468,7 @@ class Literal(Expr):
 
     def _task(self, name: Key, index: int) -> Task:
         assert index == 0
-        return DataNode(name, self.value)
+        return DataNode(name, self.value)  # type: ignore
 
 
 class Blockwise(Expr):
@@ -483,8 +482,8 @@ class Blockwise(Expr):
     expression defining a proper `_task` method.
     """
 
-    operation = None
-    _keyword_only = []
+    operation: Callable | None = None
+    _keyword_only: list[str] = []
     _projection_passthrough = False
     _preserves_partitioning_information = False
 
@@ -562,9 +561,9 @@ class Blockwise(Expr):
         """
         args = [self._blockwise_arg(op, index) for op in self._args]
         if self._kwargs:
-            return Task(name, self.operation, *args, **self._kwargs)
+            return Task(name, self.operation, *args, **self._kwargs)  # type: ignore
         else:
-            return Task(name, self.operation, *args)
+            return Task(name, self.operation, *args)  # type: ignore
 
     def _simplify_up(self, parent, dependents):
         if self._projection_passthrough and isinstance(parent, Projection):
@@ -927,7 +926,7 @@ class CreateOverlappingPartitions(Expr):
         return self.frame.divisions
 
     def _layer(self) -> dict:
-        dsk, prevs, nexts = {}, [], []
+        dsk, prevs, nexts = {}, [], []  # type: ignore
 
         name_prepend = "overlap-prepend" + self.frame._name
         if self.before:
@@ -961,7 +960,7 @@ class CreateOverlappingPartitions(Expr):
                             first = first - deltas[j]
                             j = j - 1
 
-                        dsk[(name_prepend, i)] = (
+                        dsk[(name_prepend, i)] = (  # type: ignore
                             _tail_timedelta,
                             (self.frame._name, i + 1),
                             [(self.frame._name, k) for k in range(j, i + 1)],
@@ -970,7 +969,7 @@ class CreateOverlappingPartitions(Expr):
                         prevs.append((name_prepend, i))
                 else:
                     for i in range(self.frame.npartitions - 1):
-                        dsk[(name_prepend, i)] = (
+                        dsk[(name_prepend, i)] = (  # type: ignore
                             _tail_timedelta,
                             (self.frame._name, i + 1),
                             [(self.frame._name, i)],
@@ -978,7 +977,7 @@ class CreateOverlappingPartitions(Expr):
                         )
                         prevs.append((name_prepend, i))
         else:
-            prevs.extend([None] * self.frame.npartitions)
+            prevs.extend([None] * self.frame.npartitions)  # type: ignore
 
         name_append = "overlap-append" + self.frame._name
         if self.after:
@@ -992,7 +991,7 @@ class CreateOverlappingPartitions(Expr):
                 # validate later.
                 after = 2 * self.after
                 for i in range(1, self.frame.npartitions):
-                    dsk[(name_append, i)] = (
+                    dsk[(name_append, i)] = (  # type: ignore
                         _head_timedelta,
                         (self.frame._name, i - 1),
                         (self.frame._name, i),
@@ -1000,13 +999,13 @@ class CreateOverlappingPartitions(Expr):
                     )
                     nexts.append((name_append, i))
 
-            nexts.append(None)
+            nexts.append(None)  # type: ignore
 
         else:
-            nexts.extend([None] * self.frame.npartitions)
+            nexts.extend([None] * self.frame.npartitions)  # type: ignore
 
         for i, (prev, next) in enumerate(zip(prevs, nexts)):
-            dsk[(self._name, i)] = (
+            dsk[(self._name, i)] = (  # type: ignore
                 _combined_parts,
                 prev,
                 (self.frame._name, i),
@@ -1185,7 +1184,7 @@ class Sample(Blockwise):
 
 class Query(Blockwise):
     _parameters = ["frame", "_expr", "expr_kwargs"]
-    _defaults = {"expr_kwargs": {}}
+    _defaults: dict[str, Any] = {"expr_kwargs": {}}
     _keyword_only = ["expr_kwargs"]
     operation = M.query
 
@@ -1434,7 +1433,7 @@ class CombineSeries(Elemwise):
 
 class CombineFrame(CombineSeries):
     _parameters = CombineSeries._parameters + ["overwrite"]
-    _defaults = {"fill_value": None, "overwrite": True}
+    _defaults = {"fill_value": None, "overwrite": True}  # type: ignore
 
 
 class ToNumeric(Elemwise):
@@ -1592,7 +1591,7 @@ class EnforceRuntimeDivisions(Blockwise):
             self.divisions[index + 1],
             index == (self.npartitions - 1),
         ]
-        return (self.operation,) + tuple(args)
+        return (self.operation,) + tuple(args)  # type: ignore
 
 
 class Abs(Elemwise):
@@ -1643,14 +1642,14 @@ class ToFrame(Elemwise):
 
 class ToFrameIndex(ToFrame):
     _parameters = ["frame", "index", "name"]
-    _defaults = {"name": no_default, "index": True}
+    _defaults = {"name": no_default, "index": True}  # type: ignore
     _keyword_only = ["name", "index"]
     operation = M.to_frame
     _filter_passthrough = True
 
 
 class ToSeriesIndex(ToFrameIndex):
-    _defaults = {"name": no_default, "index": None}
+    _defaults = {"name": no_default, "index": None}  # type: ignore
     operation = M.to_series
     _preserves_partitioning_information = True
 
@@ -1722,7 +1721,7 @@ class Apply(Elemwise):
     """A good example of writing a less-trivial blockwise operation"""
 
     _parameters = ["frame", "function", "args", "meta", "kwargs"]
-    _defaults = {"args": (), "kwargs": {}}
+    _defaults = {"args": (), "kwargs": {}}  # type: ignore
     operation = M.apply
 
     @functools.cached_property
@@ -1954,7 +1953,7 @@ class Assign(Elemwise):
 
 class Eval(Elemwise):
     _parameters = ["frame", "_expr", "expr_kwargs"]
-    _defaults = {"expr_kwargs": {}}
+    _defaults = {"expr_kwargs": {}}  # type: ignore
     _keyword_only = ["expr_kwargs"]
     operation = M.eval
 
@@ -2908,7 +2907,7 @@ class Partitions(Expr):
         return tuple(divisions)
 
     def _task(self, name: Key, index: int) -> Task:
-        return Alias(name, (self.frame._name, self.partitions[index]))
+        return Alias(name, (self.frame._name, self.partitions[index]))  # type: ignore
 
     def _simplify_down(self):
         from dask_expr import SetIndexBlockwise
@@ -3025,7 +3024,7 @@ class _DelayedExpr(Expr):
 
 
 class DelayedsExpr(Expr):
-    _parameters = []
+    _parameters = []  # type: ignore
 
     def __init__(self, *delayed_objects):
         self.operands = delayed_objects
@@ -3291,7 +3290,7 @@ def optimize_blockwise_fusion(expr):
 
 class Diff(MapOverlap):
     _parameters = ["frame", "periods"]
-    _defaults = {"periods": 1}
+    _defaults = {"periods": 1}  # type: ignore
     func = M.diff
     enforce_metadata = True
     transform_divisions = False
@@ -3388,7 +3387,7 @@ class BFill(FFill):
 
 class Shift(MapOverlap):
     _parameters = ["frame", "periods", "freq"]
-    _defaults = {"periods": 1, "freq": None}
+    _defaults = {"periods": 1, "freq": None}  # type: ignore
 
     func = M.shift
     enforce_metadata = True
@@ -3452,7 +3451,7 @@ class ShiftIndex(Blockwise):
 
 class MaybeAlignPartitions(Expr):
     _projection_passthrough = False
-    _expr_cls = None
+    _expr_cls: Any = None
 
     def _divisions(self):
         if {df.npartitions for df in self.args} == {1}:
@@ -3792,7 +3791,7 @@ class Fused(Blockwise):
 
             assert t.key == subname
             internal_tasks.append(t)
-        return Task.fuse(*internal_tasks, key=name)
+        return Task.fuse(*internal_tasks, key=name)  # type: ignore
 
     @staticmethod
     def _execute_internal_graph(internal_tasks, dependencies, outkey):

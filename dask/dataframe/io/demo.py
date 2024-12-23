@@ -424,7 +424,7 @@ def make_timeseries(
     from dask.dataframe import _dask_expr_enabled
 
     if _dask_expr_enabled():
-        from dask_expr import from_map
+        from dask.dataframe.dask_expr import from_map
 
         k = {}
     else:

@@ -14,7 +14,3 @@ from dask_expr.io.orc import read_orc, to_orc
 from dask_expr.io.parquet import to_parquet
 from dask_expr.io.records import to_records
 from dask_expr.io.sql import read_sql, read_sql_query, read_sql_table, to_sql
-
-import dask.dataframe
-
-__version__ = _version.get_versions()["version"]

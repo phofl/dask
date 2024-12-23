@@ -13,29 +13,17 @@ def _dask_expr_enabled() -> bool:
     return True
 
 
-try:
-    _dask_expr_enabled()
-
-    import dask_expr as dd
-
-    # trigger loading of dask-expr which will in-turn import dask.dataframe and run remainder
-    # of this module's init updating attributes to be dask-expr
-    # note: needs reload, in case dask-expr imported before dask.dataframe; works fine otherwise
-    dd = importlib.reload(dd)
-except ImportError as e:
-    msg = (
-        "Dask dataframe requirements are not installed.\n\n"
-        "Please either conda or pip install as follows:\n\n"
-        "  conda install dask                     # either conda install\n"
-        '  python -m pip install "dask[dataframe]" --upgrade  # or python -m pip install'
-    )
-    raise ImportError(msg) from e
+_dask_expr_enabled()
 
 
 try:
 
     # Ensure that dtypes are registered
-    from dask_expr import (
+    import dask.dataframe._dtypes
+    import dask.dataframe._pyarrow_compat
+    from dask.base import compute
+    from dask.dataframe import backends, dispatch
+    from dask.dataframe.dask_expr import (  # type: ignore
         DataFrame,
         Index,
         Scalar,
@@ -80,11 +68,6 @@ try:
         to_sql,
         to_timedelta,
     )
-
-    import dask.dataframe._dtypes
-    import dask.dataframe._pyarrow_compat
-    from dask.base import compute
-    from dask.dataframe import backends, dispatch
     from dask.dataframe.groupby import Aggregation
     from dask.dataframe.io import demo
     from dask.dataframe.utils import assert_eq

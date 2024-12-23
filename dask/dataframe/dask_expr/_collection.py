@@ -235,7 +235,7 @@ def _wrap_expr_method_operator(name, class_):
 
     elif class_ == Series:
 
-        def method(self, other, level=None, fill_value=None, axis=0):
+        def method(self, other, level=None, fill_value=None, axis=0):  # type: ignore
             if level is not None:
                 raise NotImplementedError("level must be None")
 
@@ -596,10 +596,6 @@ Expr={expr}"""
         """
         return new_collection(self.expr.optimize(fuse=fuse))
 
-    @property
-    def dask(self):
-        return self.__dask_graph__()
-
     def __dask_postcompute__(self):
         state = new_collection(self.expr.lower_completely())
         if type(self) != type(state):
@@ -631,7 +627,7 @@ Expr={expr}"""
                 # Raise original error
                 raise err
 
-    def visualize(self, tasks: bool = False, **kwargs):
+    def visualize(self, tasks: bool = False, **kwargs):  # type: ignore
         """Visualize the expression or task graph
 
         Parameters
@@ -1280,7 +1276,7 @@ Expr={expr}"""
         self,
         divisions: tuple | None = None,
         npartitions: int | None = None,
-        partition_size: str = None,
+        partition_size: str | None = None,
         freq=None,
         force: bool = False,
     ):
@@ -1951,9 +1947,6 @@ Expr={expr}"""
         for i in range(len(frac)):
             out.append(new_collection(expr.SplitTake(frame, i, self.ndim)))
         return out
-
-    def isnull(self):
-        return new_collection(self.expr.isnull())
 
     @derived_from(pd.DataFrame)
     def round(self, decimals=0):
@@ -4754,7 +4747,7 @@ class Index(Series):
     def count(self, split_every=False):
         return new_collection(IndexCount(self, split_every))
 
-    @property
+    @property  # type: ignore
     def index(self):
         raise AttributeError("'Index' object has no attribute 'index'")
 
