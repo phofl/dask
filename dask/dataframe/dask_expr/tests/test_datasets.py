@@ -5,9 +5,10 @@ import sys
 
 import pytest
 from dask_expr import new_collection
-from dask_expr._expr import Lengths
-from dask_expr.datasets import Timeseries, timeseries
-from dask_expr.tests._util import assert_eq
+
+from dask.dataframe.dask_expr._expr import Lengths
+from dask.dataframe.dask_expr.datasets import Timeseries, timeseries
+from dask.dataframe.dask_expr.tests._util import assert_eq
 
 
 def test_timeseries():

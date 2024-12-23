@@ -5,11 +5,11 @@ import operator
 
 import numpy as np
 import pandas as pd
-from dask_expr._collection import new_collection
-from dask_expr._expr import ArrowStringConversion
-from dask_expr.io import BlockwiseIO, PartitionsFiltered
 
 from dask._task_spec import Task
+from dask.dataframe.dask_expr._collection import new_collection
+from dask.dataframe.dask_expr._expr import ArrowStringConversion
+from dask.dataframe.dask_expr.io import BlockwiseIO, PartitionsFiltered
 from dask.dataframe.utils import pyarrow_strings_enabled
 from dask.typing import Key
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 import functools
 
 import numpy as np
-from dask_expr._expr import DropnaSeries, Expr
 
+from dask.dataframe.dask_expr._expr import DropnaSeries, Expr
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.utils import import_required, is_series_like
 

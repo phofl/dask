@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from dask_expr._core import OptimizerStage
-from dask_expr._expr import Expr, Projection, optimize_until
-from dask_expr._merge import Merge
-from dask_expr.io.parquet import ReadParquet
-
+from dask.dataframe.dask_expr._core import OptimizerStage
+from dask.dataframe.dask_expr._expr import Expr, Projection, optimize_until
+from dask.dataframe.dask_expr._merge import Merge
+from dask.dataframe.dask_expr.io.parquet import ReadParquet
 from dask.utils import funcname, import_required
 
 STAGE_LABELS: dict[OptimizerStage, str] = {
@@ -17,7 +16,9 @@ STAGE_LABELS: dict[OptimizerStage, str] = {
 }
 
 
-def explain(expr: Expr, stage: OptimizerStage = "fused", format: str | None = None):
+def explain(
+    expr: Expr, stage: OptimizerStage = "fused", format: str | None = None
+) -> None:
     graphviz = import_required(
         "graphviz", "graphviz is a required dependency for using the explain method."
     )

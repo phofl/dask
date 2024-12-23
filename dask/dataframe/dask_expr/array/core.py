@@ -8,7 +8,6 @@ from typing import Union
 
 import numpy as np
 from dask_expr import _core as core
-from dask_expr._util import _tokenize_deterministic
 from toolz import reduce
 
 from dask import istask
@@ -25,6 +24,7 @@ from dask.array.core import (
 from dask.array.utils import meta_from_array
 from dask.base import DaskMethodsMixin, named_schedulers
 from dask.core import flatten
+from dask.dataframe.dask_expr._util import _tokenize_deterministic
 from dask.utils import SerializableLock, cached_cumsum, cached_property, key_split
 
 T_IntOrNaN = Union[int, float]  # Should be Union[int, Literal[np.nan]]
@@ -84,9 +84,8 @@ class Array(core.Expr, DaskMethodsMixin):
         return self.compute()
 
     def __getitem__(self, index):
-        from dask_expr.array.slicing import Slice
-
         from dask.array.slicing import normalize_index
+        from dask.dataframe.dask_expr.array.slicing import Slice
 
         if not isinstance(index, tuple):
             index = (index,)
@@ -163,7 +162,7 @@ class Array(core.Expr, DaskMethodsMixin):
         balance=False,
         method=None,
     ):
-        from dask_expr.array.rechunk import Rechunk
+        from dask.dataframe.dask_expr.array.rechunk import Rechunk
 
         if isinstance(chunks, tuple):
             assert len(chunks) == self.ndim
@@ -254,7 +253,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.any : equivalent function
         """
-        from dask_expr.array.reductions import any
+        from dask.dataframe.dask_expr.array.reductions import any
 
         return any(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out)
 
@@ -267,7 +266,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.all : equivalent function
         """
-        from dask_expr.array.reductions import all
+        from dask.dataframe.dask_expr.array.reductions import all
 
         return all(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out)
 
@@ -280,7 +279,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.min : equivalent function
         """
-        from dask_expr.array.reductions import min
+        from dask.dataframe.dask_expr.array.reductions import min
 
         return min(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out)
 
@@ -293,7 +292,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.max : equivalent function
         """
-        from dask_expr.array.reductions import max
+        from dask.dataframe.dask_expr.array.reductions import max
 
         return max(self, axis=axis, keepdims=keepdims, split_every=split_every, out=out)
 
@@ -306,7 +305,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.argmin : equivalent function
         """
-        from dask_expr.array.reductions import argmin
+        from dask.dataframe.dask_expr.array.reductions import argmin
 
         return argmin(
             self, axis=axis, keepdims=keepdims, split_every=split_every, out=out
@@ -321,7 +320,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.argmax : equivalent function
         """
-        from dask_expr.array.reductions import argmax
+        from dask.dataframe.dask_expr.array.reductions import argmax
 
         return argmax(
             self, axis=axis, keepdims=keepdims, split_every=split_every, out=out
@@ -337,7 +336,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.sum : equivalent function
         """
-        from dask_expr.array.reductions import sum
+        from dask.dataframe.dask_expr.array.reductions import sum
 
         return sum(
             self,
@@ -357,7 +356,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.mean : equivalent function
         """
-        from dask_expr.array.reductions import mean
+        from dask.dataframe.dask_expr.array.reductions import mean
 
         return mean(
             self,
@@ -379,7 +378,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.std : equivalent function
         """
-        from dask_expr.array.reductions import std
+        from dask.dataframe.dask_expr.array.reductions import std
 
         return std(
             self,
@@ -402,7 +401,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.var : equivalent function
         """
-        from dask_expr.array.reductions import var
+        from dask.dataframe.dask_expr.array.reductions import var
 
         return var(
             self,
@@ -432,7 +431,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.moment : equivalent function
         """
-        from dask_expr.array.reductions import moment
+        from dask.dataframe.dask_expr.array.reductions import moment
 
         return moment(
             self,
@@ -454,7 +453,7 @@ class Array(core.Expr, DaskMethodsMixin):
         --------
         dask.array.prod : equivalent function
         """
-        from dask_expr.array.reductions import prod
+        from dask.dataframe.dask_expr.array.reductions import prod
 
         return prod(
             self,
@@ -678,4 +677,4 @@ def asarray(
     return from_array(a, getitem=getter_inline, **kwargs)
 
 
-from dask_expr.array.blockwise import Transpose, elemwise
+from dask.dataframe.dask_expr.array.blockwise import Transpose, elemwise

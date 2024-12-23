@@ -5,11 +5,15 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import pandas as pd
-from dask_expr._expr import ArrowStringConversion, DelayedsExpr, PartitionsFiltered
-from dask_expr._util import _tokenize_deterministic
-from dask_expr.io import BlockwiseIO
 
 from dask._task_spec import Alias, Task, TaskRef
+from dask.dataframe.dask_expr._expr import (
+    ArrowStringConversion,
+    DelayedsExpr,
+    PartitionsFiltered,
+)
+from dask.dataframe.dask_expr._util import _tokenize_deterministic
+from dask.dataframe.dask_expr.io import BlockwiseIO
 from dask.dataframe.dispatch import make_meta
 from dask.dataframe.utils import check_meta, pyarrow_strings_enabled
 from dask.delayed import Delayed, delayed
@@ -63,7 +67,7 @@ class FromDelayed(PartitionsFiltered, BlockwiseIO):
                 TaskRef((self.delayed_container._name, index)),
             )
         else:
-            return Alias((self.delayed_container._name, index))
+            return Alias((self.delayed_container._name, index))  # type: ignore
 
 
 def identity(x):
@@ -115,11 +119,11 @@ def from_delayed(
     if isinstance(dfs, Delayed) or hasattr(dfs, "key"):
         dfs = [dfs]
 
-    if len(dfs) == 0:
+    if len(dfs) == 0:  # type: ignore
         raise TypeError("Must supply at least one delayed object")
 
     if meta is None:
-        meta = delayed(make_meta)(dfs[0]).compute()
+        meta = delayed(make_meta)(dfs[0]).compute()  # type: ignore
 
     if divisions == "sorted":
         raise NotImplementedError(
@@ -128,7 +132,7 @@ def from_delayed(
         )
     elif divisions is not None:
         divs = list(divisions)
-        if len(divs) != len(dfs) + 1:
+        if len(divs) != len(dfs) + 1:  # type: ignore
             raise ValueError("divisions should be a tuple of len(dfs) + 1")
 
     dfs = [
@@ -140,7 +144,7 @@ def from_delayed(
         if not isinstance(item, Delayed):
             raise TypeError("Expected Delayed object, got %s" % type(item).__name__)
 
-    from dask_expr._collection import new_collection
+    from dask.dataframe.dask_expr._collection import new_collection
 
     result = FromDelayed(
         DelayedsExpr(*dfs), make_meta(meta), divisions, verify_meta, None, prefix

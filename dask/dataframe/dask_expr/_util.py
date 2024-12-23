@@ -93,7 +93,7 @@ def is_scalar(x):
     if isinstance(x, (str, int)) or x is None:
         return True
 
-    from dask_expr._expr import Expr
+    from dask.dataframe.dask_expr._expr import Expr
 
     return not isinstance(x, Expr)
 
@@ -148,7 +148,7 @@ class _BackendData:
 
     @functools.cached_property
     def _token(self):
-        from dask_expr._util import _tokenize_deterministic
+        from dask.dataframe.dask_expr._util import _tokenize_deterministic
 
         return _tokenize_deterministic(self._data)
 

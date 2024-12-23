@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import pytest
-from dask_expr._collection import from_pandas
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr._collection import from_pandas
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 pd = _backend_library()
 

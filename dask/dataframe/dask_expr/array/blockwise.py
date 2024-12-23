@@ -9,7 +9,6 @@ from collections.abc import Iterable
 
 import numpy as np
 import toolz
-from dask_expr.array.core import Array, asarray
 
 from dask.array.core import (
     PerformanceWarning,
@@ -23,6 +22,7 @@ from dask.array.utils import compute_meta
 from dask.base import is_dask_collection
 from dask.blockwise import _blockwise_unpack_collections_task_spec
 from dask.blockwise import blockwise as core_blockwise
+from dask.dataframe.dask_expr.array.core import Array, asarray
 from dask.tokenize import tokenize
 from dask.utils import cached_property, funcname
 

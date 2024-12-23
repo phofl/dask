@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import functools
 
-from dask_expr._accessor import Accessor, FunctionMap
-from dask_expr._expr import Blockwise
-from dask_expr._reductions import Reduction
-
+from dask.dataframe.dask_expr._accessor import Accessor, FunctionMap
+from dask.dataframe.dask_expr._expr import Blockwise
+from dask.dataframe.dask_expr._reductions import Reduction
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 
 
@@ -106,7 +105,8 @@ class StringAccessor(Accessor):
 
     def cat(self, others=None, sep=None, na_rep=None):
         import pandas as pd
-        from dask_expr._collection import Index, Series, new_collection
+
+        from dask.dataframe.dask_expr._collection import Index, Series, new_collection
 
         if others is None:
             return new_collection(Cat(self._series, sep, na_rep))

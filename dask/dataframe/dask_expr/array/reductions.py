@@ -7,7 +7,6 @@ from itertools import product
 from numbers import Integral, Number
 
 import numpy as np
-from dask_expr.array.core import Array
 from tlz import compose, get, partition_all
 
 from dask import config
@@ -17,6 +16,7 @@ from dask.array.dispatch import divide_lookup, nannumel_lookup, numel_lookup
 from dask.array.reductions import array_safe
 from dask.array.utils import compute_meta, is_arraylike, validate_axis
 from dask.blockwise import lol_tuples
+from dask.dataframe.dask_expr.array.core import Array
 from dask.tokenize import tokenize
 from dask.utils import (
     cached_property,
@@ -948,4 +948,4 @@ def nanstd(
     return result
 
 
-from dask_expr.array.blockwise import blockwise
+from dask.dataframe.dask_expr.array.blockwise import blockwise

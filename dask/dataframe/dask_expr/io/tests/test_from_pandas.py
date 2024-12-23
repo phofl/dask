@@ -4,9 +4,9 @@ import copy
 
 import pytest
 from dask_expr import from_pandas, repartition
-from dask_expr.tests._util import _backend_library
 
 import dask
+from dask.dataframe.dask_expr.tests._util import _backend_library
 from dask.dataframe.utils import assert_eq
 
 pd = _backend_library()

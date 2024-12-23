@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from dask_expr._dispatch import get_collection_type
-from dask_expr._expr import ToBackend
 
 from dask.backends import CreationDispatch
 from dask.dataframe.backends import DataFrameBackendEntrypoint
+from dask.dataframe.dask_expr._dispatch import get_collection_type
+from dask.dataframe.dask_expr._expr import ToBackend
 from dask.dataframe.dispatch import to_pandas_dispatch
 
 try:
@@ -54,7 +54,7 @@ class PandasBackendEntrypoint(DataFrameBackendEntrypoint):
 
     @classmethod
     def to_backend(cls, data, **kwargs):
-        from dask_expr._collection import new_collection
+        from dask.dataframe.dask_expr._collection import new_collection
 
         return new_collection(ToPandasBackend(data, kwargs))
 
@@ -64,21 +64,21 @@ dataframe_creation_dispatch.register_backend("pandas", PandasBackendEntrypoint()
 
 @get_collection_type.register(pd.Series)
 def get_collection_type_series(_):
-    from dask_expr._collection import Series
+    from dask.dataframe.dask_expr._collection import Series
 
     return Series
 
 
 @get_collection_type.register(pd.DataFrame)
 def get_collection_type_dataframe(_):
-    from dask_expr._collection import DataFrame
+    from dask.dataframe.dask_expr._collection import DataFrame
 
     return DataFrame
 
 
 @get_collection_type.register(pd.Index)
 def get_collection_type_index(_):
-    from dask_expr._collection import Index
+    from dask.dataframe.dask_expr._collection import Index
 
     return Index
 
@@ -142,7 +142,7 @@ if scipy_installed:  # type: ignore[misc]
 
 @get_collection_type.register(object)
 def get_collection_type_object(_):
-    from dask_expr._collection import Scalar
+    from dask.dataframe.dask_expr._collection import Scalar
 
     return Scalar
 

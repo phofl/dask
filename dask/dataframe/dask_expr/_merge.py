@@ -5,7 +5,10 @@ import math
 import operator
 
 import numpy as np
-from dask_expr._expr import (  # noqa: F401
+from toolz import merge_sorted, unique
+
+from dask._task_spec import Task, TaskRef
+from dask.dataframe.dask_expr._expr import (  # noqa: F401
     And,
     Binop,
     Blockwise,
@@ -23,17 +26,18 @@ from dask_expr._expr import (  # noqa: F401
     determine_column_projection,
     is_filter_pushdown_available,
 )
-from dask_expr._repartition import Repartition
-from dask_expr._shuffle import (
+from dask.dataframe.dask_expr._repartition import Repartition
+from dask.dataframe.dask_expr._shuffle import (
     RearrangeByColumn,
     _contains_index_name,
     _is_numeric_cast_type,
     _select_columns_or_index,
 )
-from dask_expr._util import _convert_to_list, _tokenize_deterministic, is_scalar
-from toolz import merge_sorted, unique
-
-from dask._task_spec import Task, TaskRef
+from dask.dataframe.dask_expr._util import (
+    _convert_to_list,
+    _tokenize_deterministic,
+    is_scalar,
+)
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.dataframe.multi import (
     _concat_wrapper,
@@ -312,18 +316,6 @@ class Merge(Expr):
             or self.right.npartitions == 1
             and self.how in ("left", "inner", "leftsemi")
         )
-
-    @functools.cached_property
-    def merge_indexed_left(self):
-        return (
-            self.left_index or _contains_index_name(self.left, self.left_on)
-        ) and self.left.known_divisions
-
-    @functools.cached_property
-    def merge_indexed_right(self):
-        return (
-            self.right_index or _contains_index_name(self.right, self.right_on)
-        ) and self.right.known_divisions
 
     @functools.cached_property
     def merge_indexed_left(self):
@@ -832,14 +824,14 @@ class BroadcastJoin(Merge, PartitionsFiltered):
                     _merge_args.reverse()
 
                 inter_key = (inter_name, part_out, j)
-                dsk[(inter_name, part_out, j)] = (
+                dsk[(inter_name, part_out, j)] = (  # type: ignore
                     apply,
                     _merge_chunk_wrapper,
                     _merge_args,
                     kwargs,
                 )
                 _concat_list.append(inter_key)
-            dsk[(self._name, part_out)] = (_concat_wrapper, _concat_list)
+            dsk[(self._name, part_out)] = (_concat_wrapper, _concat_list)  # type: ignore
         return dsk
 
 

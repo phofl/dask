@@ -4,17 +4,23 @@ import functools
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-from dask_expr._expr import Blockwise, Expr
-from dask_expr._util import _tokenize_deterministic, is_scalar
-from dask_expr.diagnostics._explain import _add_graphviz_edges, _explain_info
-from dask_expr.io.io import FusedIO
 
 from dask.base import DaskMethodsMixin
+from dask.dataframe.dask_expr._expr import Blockwise, Expr
+from dask.dataframe.dask_expr._util import _tokenize_deterministic, is_scalar
+from dask.dataframe.dask_expr.diagnostics._explain import (
+    _add_graphviz_edges,
+    _explain_info,
+)
+from dask.dataframe.dask_expr.io.io import FusedIO
 from dask.sizeof import sizeof
 from dask.utils import format_bytes, import_required
 
 if TYPE_CHECKING:
-    from dask_expr.diagnostics._analyze_plugin import ExpressionStatistics, Statistics
+    from dask.dataframe.dask_expr.diagnostics._analyze_plugin import (
+        ExpressionStatistics,
+        Statistics,
+    )
 
 
 def inject_analyze(expr: Expr, id: str, injected: dict) -> Expr:
@@ -34,7 +40,7 @@ def inject_analyze(expr: Expr, id: str, injected: dict) -> Expr:
 
 def analyze(
     expr: Expr, filename: str | None = None, format: str | None = None, **kwargs: Any
-):
+) -> None:
     import_required(
         "distributed",
         "distributed is a required dependency for using the analyze method.",
@@ -46,10 +52,10 @@ def analyze(
         "graphviz", "graphviz is a required dependency for using the analyze method."
     )
     from dask_expr import new_collection
-    from dask_expr.diagnostics._analyze_plugin import AnalyzePlugin
 
     from distributed import get_client, wait
 
+    from dask.dataframe.dask_expr.diagnostics._analyze_plugin import AnalyzePlugin
     from dask.dot import graphviz_to_file
 
     try:
@@ -72,7 +78,7 @@ def analyze(
     # Collect data
     statistics: Statistics = client.sync(
         client.scheduler.analyze_get_statistics, id=analysis_id
-    )  # type: ignore
+    )
 
     # Plot statistics in graph
     seen = set(expr._name)
@@ -136,7 +142,7 @@ _FORMAT_FNS = {"nbytes": format_bytes, "nrows": "{:,.0f}".format}
 def _metric_to_graphviz(metric: str, statistics: dict[str, Any]):
     format_fn = _FORMAT_FNS[metric]
     quantiles = (
-        "[" + ", ".join([format_fn(pctl) for pctl in statistics.pop("quantiles")]) + "]"
+        "[" + ", ".join([format_fn(pctl) for pctl in statistics.pop("quantiles")]) + "]"  # type: ignore
     )
     count = statistics["count"]
     total = statistics["total"]
@@ -144,7 +150,7 @@ def _metric_to_graphviz(metric: str, statistics: dict[str, Any]):
     return "<BR />".join(
         [
             f"<B>{metric}:</B>",
-            f"{format_fn(total / count)} ({format_fn(total)} / {count:,})",
+            f"{format_fn(total / count)} ({format_fn(total)} / {count:,})",  # type: ignore
             f"{quantiles}",
         ]
     )
@@ -168,7 +174,7 @@ def _statistics_info(statistics: ExpressionStatistics):
 
 
 def collect_statistics(frame, analysis_id, expr_name):
-    from dask_expr.diagnostics._analyze_plugin import get_worker_plugin
+    from dask.dataframe.dask_expr.diagnostics._analyze_plugin import get_worker_plugin
 
     worker_plugin = get_worker_plugin()
     if isinstance(frame, pd.DataFrame):

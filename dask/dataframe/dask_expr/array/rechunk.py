@@ -6,8 +6,6 @@ import operator
 
 import numpy as np
 import toolz
-from dask_expr.array import Array
-from dask_expr.array.core import IO
 
 import dask
 from dask.array.core import concatenate3
@@ -20,6 +18,8 @@ from dask.array.rechunk import (
     tokenize,
     validate_axis,
 )
+from dask.dataframe.dask_expr.array import Array
+from dask.dataframe.dask_expr.array.core import IO
 from dask.utils import cached_property
 
 
@@ -241,4 +241,4 @@ def _compute_rechunk(old_name, old_chunks, chunks, level, name):
     return name, chunks, {**x2, **intermediates}
 
 
-from dask_expr.array.blockwise import Elemwise, Transpose
+from dask.dataframe.dask_expr.array.blockwise import Elemwise, Transpose

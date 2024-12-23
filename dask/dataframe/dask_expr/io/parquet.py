@@ -20,7 +20,13 @@ import pyarrow.dataset as pa_ds
 import pyarrow.fs as pa_fs
 import pyarrow.parquet as pq
 import tlz as toolz
-from dask_expr._expr import (
+from fsspec.utils import stringify_path
+from toolz import identity
+
+import dask
+from dask._task_spec import Task, TaskRef
+from dask.core import flatten
+from dask.dataframe.dask_expr._expr import (
     EQ,
     GE,
     GT,
@@ -38,16 +44,10 @@ from dask_expr._expr import (
     Projection,
     determine_column_projection,
 )
-from dask_expr._reductions import Len
-from dask_expr._util import _convert_to_list, _tokenize_deterministic
-from dask_expr.io import BlockwiseIO, PartitionsFiltered
-from dask_expr.io.io import FusedParquetIO
-from fsspec.utils import stringify_path
-from toolz import identity
-
-import dask
-from dask._task_spec import Task, TaskRef
-from dask.core import flatten
+from dask.dataframe.dask_expr._reductions import Len
+from dask.dataframe.dask_expr._util import _convert_to_list, _tokenize_deterministic
+from dask.dataframe.dask_expr.io import BlockwiseIO, PartitionsFiltered
+from dask.dataframe.dask_expr.io.io import FusedParquetIO
 from dask.dataframe.io.parquet.core import (
     ParquetFunctionWrapper,
     ToParquetFunctionWrapper,
@@ -88,7 +88,7 @@ def _maybe_adjust_cpu_count():
         _CPU_COUNT_SET = True
 
 
-_STATS_CACHE = {}
+_STATS_CACHE = {}  # type: ignore
 
 
 PYARROW_NULLABLE_DTYPE_MAPPING = {
@@ -109,11 +109,11 @@ PYARROW_NULLABLE_DTYPE_MAPPING = {
 NONE_LABEL = "__null_dask_index__"
 
 _CACHED_PLAN_SIZE = 10
-_cached_plan = {}
+_cached_plan = {}  # type: ignore
 
 
 class FragmentWrapper:
-    _filesystems = weakref.WeakValueDictionary()
+    _filesystems = weakref.WeakValueDictionary()  # type: ignore
     _filesystem_pickle_cache = (-1, None)
 
     def __init__(
@@ -463,7 +463,7 @@ def to_parquet(
     --------
     read_parquet: Read parquet data to dask.dataframe
     """
-    from dask_expr._collection import new_collection
+    from dask.dataframe.dask_expr._collection import new_collection
 
     engine = _set_parquet_engine(engine=engine, meta=df._meta)
     compute_kwargs = compute_kwargs or {}
@@ -1465,9 +1465,9 @@ class ReadParquetFSSpec(ReadParquet):
         """Return known partition lengths using parquet statistics"""
         if not self.filters:
             self._update_length_statistics()
-            return tuple(
+            return tuple(  # type: ignore
                 length
-                for i, length in enumerate(self._pq_length_stats)
+                for i, length in enumerate(self._pq_length_stats)  # type: ignore
                 if not self._filtered or i in self._partitions
             )
         return None
@@ -1598,18 +1598,18 @@ class _DNF:
 
         def to_list_tuple(self) -> list:
             # DNF "and" is List[Tuple]
-            return tuple(
+            return tuple(  # type: ignore
                 val.to_list_tuple() if hasattr(val, "to_list_tuple") else val
                 for val in self
             )
 
     _filters: _And | _Or | None  # Underlying filter expression
 
-    def __init__(self, filters: _And | _Or | list | tuple | None) -> _DNF:
+    def __init__(self, filters: _And | _Or | list | tuple | None) -> None:
         self._filters = self.normalize(filters)
 
     def to_list_tuple(self) -> list:
-        return self._filters.to_list_tuple()
+        return self._filters.to_list_tuple()  # type: ignore
 
     def __bool__(self) -> bool:
         return bool(self._filters)
@@ -1670,8 +1670,8 @@ class _DNF:
             ):
                 # Simple dict to make sure field comes first in filter
                 flip = {LE: GE, LT: GT, GE: LE, GT: LT}
-                op = predicate_expr
-                op = flip.get(op, op)._operator_repr
+                op = predicate_expr  # type: ignore
+                op = flip.get(op, op)._operator_repr  # type: ignore
                 column = predicate_expr.right.columns[0]
                 value = predicate_expr.left
                 _filters = (column, op, value)
@@ -1681,9 +1681,9 @@ class _DNF:
             right = cls.extract_pq_filters(pq_expr, predicate_expr.right)._filters
             if left and right:
                 if isinstance(predicate_expr, And):
-                    _filters = cls._And([left, right])
+                    _filters = cls._And([left, right])  # type: ignore
                 else:
-                    _filters = cls._Or([left, right])
+                    _filters = cls._Or([left, right])  # type: ignore
 
         return _DNF(_filters)
 

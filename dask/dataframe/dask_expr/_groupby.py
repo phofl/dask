@@ -7,8 +7,24 @@ from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
-from dask_expr._collection import FrameBase, Index, Series, new_collection
-from dask_expr._expr import (
+from pandas.core.apply import reconstruct_func, validate_func_kwargs
+
+from dask import is_dask_collection
+from dask._task_spec import Task
+from dask.core import flatten
+from dask.dataframe.core import (
+    _concat,
+    apply_and_enforce,
+    is_dataframe_like,
+    is_series_like,
+)
+from dask.dataframe.dask_expr._collection import (
+    FrameBase,
+    Index,
+    Series,
+    new_collection,
+)
+from dask.dataframe.dask_expr._expr import (
     Assign,
     Blockwise,
     Expr,
@@ -23,24 +39,13 @@ from dask_expr._expr import (
     determine_column_projection,
     no_default,
 )
-from dask_expr._reductions import ApplyConcatApply, Chunk, Reduction
-from dask_expr._shuffle import RearrangeByColumn
-from dask_expr._util import (
+from dask.dataframe.dask_expr._reductions import ApplyConcatApply, Chunk, Reduction
+from dask.dataframe.dask_expr._shuffle import RearrangeByColumn
+from dask.dataframe.dask_expr._util import (
     PANDAS_GE_300,
     _convert_to_list,
     get_specified_shuffle,
     is_scalar,
-)
-from pandas.core.apply import reconstruct_func, validate_func_kwargs
-
-from dask import is_dask_collection
-from dask._task_spec import Task
-from dask.core import flatten
-from dask.dataframe.core import (
-    _concat,
-    apply_and_enforce,
-    is_dataframe_like,
-    is_series_like,
 )
 from dask.dataframe.dispatch import concat, make_meta, meta_nonempty
 from dask.dataframe.groupby import (
@@ -290,8 +295,8 @@ class SingleAggregation(GroupByApplyConcatApply, GroupByBase):
         "shuffle_method": None,
     }
 
-    groupby_chunk = None
-    groupby_aggregate = None
+    groupby_chunk: Callable | None = None
+    groupby_aggregate: Callable | None = None
 
     @classmethod
     def chunk(cls, df, *by, **kwargs):
@@ -302,7 +307,7 @@ class SingleAggregation(GroupByApplyConcatApply, GroupByBase):
         return _groupby_aggregate(_concat(inputs), **kwargs)
 
     @property
-    def chunk_kwargs(self) -> dict:
+    def chunk_kwargs(self) -> dict:  # type: ignore
         chunk_kwargs = self.operand("chunk_kwargs") or {}
         columns = self._slice
         return {
@@ -314,7 +319,7 @@ class SingleAggregation(GroupByApplyConcatApply, GroupByBase):
         }
 
     @property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         aggregate_kwargs = self.operand("aggregate_kwargs") or {}
         groupby_aggregate = self.groupby_aggregate or self.groupby_chunk
         return {
@@ -492,7 +497,7 @@ class HolisticGroupbyAggregation(GroupbyAggregationBase):
         return _groupby_aggregate_spec(_concat(inputs), **kwargs)
 
     @property
-    def chunk_kwargs(self) -> dict:
+    def chunk_kwargs(self) -> dict:  # type: ignore
         return {
             "by": self._by_columns,
             "key": [col for col in self.frame.columns if col not in self._by_columns],
@@ -501,7 +506,7 @@ class HolisticGroupbyAggregation(GroupbyAggregationBase):
         }
 
     @property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         return {
             "spec": self.arg,
             "levels": _determine_levels(self.by),
@@ -527,7 +532,7 @@ class DecomposableGroupbyAggregation(GroupbyAggregationBase):
         return _agg_finalize(_concat(inputs), **kwargs)
 
     @property
-    def chunk_kwargs(self) -> dict:
+    def chunk_kwargs(self) -> dict:  # type: ignore
         return {
             "funcs": self.agg_args["chunk_funcs"],
             "sort": self.sort,
@@ -536,7 +541,7 @@ class DecomposableGroupbyAggregation(GroupbyAggregationBase):
         }
 
     @property
-    def combine_kwargs(self) -> dict:
+    def combine_kwargs(self) -> dict:  # type: ignore
         return {
             "funcs": self.agg_args["aggregate_funcs"],
             "level": self.levels,
@@ -546,7 +551,7 @@ class DecomposableGroupbyAggregation(GroupbyAggregationBase):
         }
 
     @property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         return {
             "aggregate_funcs": self.agg_args["aggregate_funcs"],
             "arg": self.arg,
@@ -634,7 +639,7 @@ class Unique(SingleAggregation):
     groupby_aggregate = staticmethod(_unique_aggregate)
 
     @functools.cached_property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         kwargs = super().aggregate_kwargs
         meta = self.frame._meta
         if meta.ndim == 1:
@@ -657,11 +662,11 @@ class Cov(SingleAggregation):
         return _cov_agg(_concat(inputs), **kwargs)
 
     @property
-    def chunk_kwargs(self) -> dict:
+    def chunk_kwargs(self) -> dict:  # type: ignore
         return self.operand("chunk_kwargs")
 
     @property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         kwargs = self.operand("aggregate_kwargs").copy()
         kwargs["sort"] = self.sort
         kwargs["std"] = self.std
@@ -669,7 +674,7 @@ class Cov(SingleAggregation):
         return kwargs
 
     @property
-    def combine_kwargs(self) -> dict:
+    def combine_kwargs(self) -> dict:  # type: ignore
         return {"levels": self.levels}
 
 
@@ -843,13 +848,13 @@ class NUnique(SingleAggregation):
         return _nunique_df_chunk(df, *by, **kwargs)
 
     @functools.cached_property
-    def chunk_kwargs(self) -> dict:
+    def chunk_kwargs(self) -> dict:  # type: ignore
         kwargs = super().chunk_kwargs
         kwargs["name"] = self._slice
         return kwargs
 
     @functools.cached_property
-    def aggregate_kwargs(self) -> dict:
+    def aggregate_kwargs(self) -> dict:  # type: ignore
         return {"levels": self.levels, "name": self._slice}
 
     @functools.cached_property
@@ -1349,7 +1354,7 @@ class GroupByCumulative(Expr, GroupByBase):
     _parameters = ["frame", "dropna", "_slice", "numeric_only"]
     _defaults = {"numeric_only": None, "dropna": None, "_slice": None}
     chunk = None
-    aggregate = None
+    aggregate: Callable | None = None
     initial = 0
 
     @functools.cached_property
@@ -1458,14 +1463,14 @@ class GroupByCumulativeFinalizer(Expr, GroupByBase):
                 dsk[(name_cum, i)] = (self.cum_last._name, i - 1)
             else:
                 # aggregate with previous cumulation results
-                dsk[(name_cum, i)] = (
+                dsk[(name_cum, i)] = (  # type: ignore
                     _cum_agg_filled,
                     (name_cum, i - 1),
                     (self.cum_last._name, i - 1),
                     self.aggregate,
                     self.initial,
                 )
-            dsk[(self._name, i)] = (
+            dsk[(self._name, i)] = (  # type: ignore
                 _cum_agg_aligned,
                 (self.frame._name, i),
                 (name_cum, i),
@@ -2173,7 +2178,7 @@ class GroupBy:
         >>> ddf = dask.datasets.timeseries(freq="1h")
         >>> result = ddf.groupby("name").x.rolling('1D').max()
         """
-        from dask_expr._rolling import Rolling
+        from dask.dataframe.dask_expr._rolling import Rolling
 
         return Rolling(
             self.obj,

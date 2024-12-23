@@ -9,17 +9,17 @@ from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
 import toolz
-from dask_expr._util import _BackendData, _tokenize_deterministic
 
 import dask
 from dask._task_spec import Task
 from dask.dataframe.core import is_dataframe_like, is_index_like, is_series_like
+from dask.dataframe.dask_expr._util import _BackendData, _tokenize_deterministic
 from dask.typing import Key
 from dask.utils import funcname, import_required, is_arraylike
 
 if TYPE_CHECKING:
     # TODO import from typing (requires Python >=3.10)
-    from typing import TypeAlias
+    from typing import Any, TypeAlias
 
 OptimizerStage: TypeAlias = Literal[
     "logical",
@@ -42,9 +42,9 @@ def _unpack_collections(o):
 
 
 class Expr:
-    _parameters = []
-    _defaults = {}
-    _instances = weakref.WeakValueDictionary()
+    _parameters = []  # type: ignore
+    _defaults: dict[str, Any] = {}
+    _instances = weakref.WeakValueDictionary()  # type: ignore
 
     def __new__(cls, *args, **kwargs):
         operands = list(args)
@@ -134,16 +134,16 @@ class Expr:
         return os.linesep.join(self._tree_repr_lines())
 
     def analyze(self, filename: str | None = None, format: str | None = None) -> None:
-        from dask_expr.diagnostics import analyze
+        from dask.dataframe.dask_expr.diagnostics import analyze
 
-        return analyze(self, filename=filename, format=format)
+        return analyze(self, filename=filename, format=format)  # type: ignore
 
     def explain(
         self, stage: OptimizerStage = "fused", format: str | None = None
     ) -> None:
-        from dask_expr.diagnostics import explain
+        from dask.dataframe.dask_expr.diagnostics import explain
 
-        return explain(self, stage, format)
+        return explain(self, stage, format)  # type: ignore
 
     def pprint(self):
         for line in self._tree_repr_lines():
@@ -465,7 +465,7 @@ class Expr:
         """
         # Lower until nothing changes
         expr = self
-        lowered = {}
+        lowered: dict = {}
         while True:
             new = expr.lower_once(lowered)
             if new._name == expr._name:
@@ -778,7 +778,7 @@ class Expr:
         assert (
             isinstance(operation, tuple)
             and all(issubclass(e, Expr) for e in operation)
-            or issubclass(operation, Expr)
+            or issubclass(operation, Expr)  # type: ignore
         ), "`operation` must be`Expr` subclass)"
         return (expr for expr in self.walk() if isinstance(expr, operation))
 

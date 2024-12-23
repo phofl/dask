@@ -9,74 +9,9 @@ from functools import wraps
 from numbers import Integral, Number
 from typing import Any, ClassVar, Literal
 
-import dask_expr._backends  # noqa: F401
 import numpy as np
 import pandas as pd
 import pyarrow as pa
-from dask_expr import _expr as expr
-from dask_expr._backends import dataframe_creation_dispatch
-from dask_expr._categorical import CategoricalAccessor, Categorize, GetCategories
-from dask_expr._concat import Concat
-from dask_expr._core import OptimizerStage
-from dask_expr._datetime import DatetimeAccessor
-from dask_expr._describe import DescribeNonNumeric, DescribeNumeric
-from dask_expr._dispatch import get_collection_type
-from dask_expr._expr import (
-    BFill,
-    Diff,
-    Eval,
-    FFill,
-    FillnaCheck,
-    Query,
-    Shift,
-    ToDatetime,
-    ToNumeric,
-    ToTimedelta,
-    no_default,
-)
-from dask_expr._merge import JoinRecursive, Merge
-from dask_expr._quantile import SeriesQuantile
-from dask_expr._quantiles import RepartitionQuantiles
-from dask_expr._reductions import (
-    Corr,
-    Cov,
-    CustomReduction,
-    DropDuplicates,
-    IndexCount,
-    IsMonotonicDecreasing,
-    IsMonotonicIncreasing,
-    Len,
-    MemoryUsageFrame,
-    MemoryUsageIndex,
-    Moment,
-    NLargest,
-    NSmallest,
-    PivotTable,
-    Unique,
-    ValueCounts,
-)
-from dask_expr._repartition import Repartition, RepartitionFreq
-from dask_expr._shuffle import (
-    RearrangeByColumn,
-    SetIndex,
-    SetIndexBlockwise,
-    SortValues,
-)
-from dask_expr._str_accessor import StringAccessor
-from dask_expr._util import (
-    PANDAS_GE_300,
-    _BackendData,
-    _convert_to_list,
-    _get_shuffle_preferring_order,
-    _is_any_real_numeric_dtype,
-    _maybe_from_pandas,
-    _raise_if_object_series,
-    _tokenize_deterministic,
-    _validate_axis,
-    get_specified_shuffle,
-    is_scalar,
-)
-from dask_expr.io import FromPandasDivisions, FromScalars
 from fsspec.utils import stringify_path
 from packaging.version import parse as parse_version
 from pandas import CategoricalDtype
@@ -88,6 +23,7 @@ from pyarrow import fs as pa_fs
 from tlz import first
 
 import dask.array as da
+import dask.dataframe.dask_expr._backends  # noqa: F401
 import dask.dataframe.methods as methods
 from dask import compute, get_annotations
 from dask.array import Array
@@ -106,6 +42,74 @@ from dask.dataframe.core import (
     is_series_like,
     meta_warning,
 )
+from dask.dataframe.dask_expr import _expr as expr
+from dask.dataframe.dask_expr._backends import dataframe_creation_dispatch
+from dask.dataframe.dask_expr._categorical import (
+    CategoricalAccessor,
+    Categorize,
+    GetCategories,
+)
+from dask.dataframe.dask_expr._concat import Concat
+from dask.dataframe.dask_expr._core import OptimizerStage
+from dask.dataframe.dask_expr._datetime import DatetimeAccessor
+from dask.dataframe.dask_expr._describe import DescribeNonNumeric, DescribeNumeric
+from dask.dataframe.dask_expr._dispatch import get_collection_type
+from dask.dataframe.dask_expr._expr import (
+    BFill,
+    Diff,
+    Eval,
+    FFill,
+    FillnaCheck,
+    Query,
+    Shift,
+    ToDatetime,
+    ToNumeric,
+    ToTimedelta,
+    no_default,
+)
+from dask.dataframe.dask_expr._merge import JoinRecursive, Merge
+from dask.dataframe.dask_expr._quantile import SeriesQuantile
+from dask.dataframe.dask_expr._quantiles import RepartitionQuantiles
+from dask.dataframe.dask_expr._reductions import (
+    Corr,
+    Cov,
+    CustomReduction,
+    DropDuplicates,
+    IndexCount,
+    IsMonotonicDecreasing,
+    IsMonotonicIncreasing,
+    Len,
+    MemoryUsageFrame,
+    MemoryUsageIndex,
+    Moment,
+    NLargest,
+    NSmallest,
+    PivotTable,
+    Unique,
+    ValueCounts,
+)
+from dask.dataframe.dask_expr._repartition import Repartition, RepartitionFreq
+from dask.dataframe.dask_expr._shuffle import (
+    RearrangeByColumn,
+    SetIndex,
+    SetIndexBlockwise,
+    SortValues,
+)
+from dask.dataframe.dask_expr._str_accessor import StringAccessor
+from dask.dataframe.dask_expr._util import (
+    PANDAS_GE_300,
+    _BackendData,
+    _convert_to_list,
+    _get_shuffle_preferring_order,
+    _is_any_real_numeric_dtype,
+    _maybe_from_pandas,
+    _raise_if_object_series,
+    _tokenize_deterministic,
+    _validate_axis,
+    get_specified_shuffle,
+    is_scalar,
+)
+from dask.dataframe.dask_expr.io import FromPandasDivisions, FromScalars
 from dask.dataframe.dispatch import (
     get_parallel_type,
     is_categorical_dtype,
@@ -841,7 +845,7 @@ Expr={expr}"""
 
     def shuffle(
         self,
-        on: str | list | no_default = no_default,
+        on: str | list | no_default = no_default,  # type: ignore
         ignore_index: bool = False,
         npartitions: int | None = None,
         shuffle_method: str | None = None,
@@ -880,7 +884,7 @@ Expr={expr}"""
         --------
         >>> df = df.shuffle(df.columns[0])  # doctest: +SKIP
         """
-        if on is no_default and not on_index:
+        if on is no_default and not on_index:  # type: ignore
             raise TypeError(
                 "Must shuffle on either columns or the index; currently shuffling on "
                 "neither. Pass column(s) to 'on' or set 'on_index' to True."
@@ -905,7 +909,7 @@ Expr={expr}"""
             elif isinstance(on, str) or isinstance(on, int):
                 on = [on]
             elif on_index:
-                on = []
+                on = []  # type: ignore
             bad_cols = [
                 index_col
                 for index_col in on
@@ -943,7 +947,7 @@ Expr={expr}"""
 
     @derived_from(pd.DataFrame)
     def resample(self, rule, closed=None, label=None):
-        from dask_expr._resample import Resampler
+        from dask.dataframe.dask_expr._resample import Resampler
 
         return Resampler(self, rule, **{"closed": closed, "label": label})
 
@@ -973,7 +977,7 @@ Expr={expr}"""
         -------
         a Rolling object on which to call a method to compute a statistic
         """
-        from dask_expr._rolling import Rolling
+        from dask.dataframe.dask_expr._rolling import Rolling
 
         return Rolling(self, window, **kwargs)
 
@@ -2281,7 +2285,7 @@ Expr={expr}"""
         >>> df.loc["b"]  # doctest: +SKIP
         >>> df.loc["b":"d"]  # doctest: +SKIP
         """
-        from dask_expr._indexing import LocIndexer
+        from dask.dataframe.dask_expr._indexing import LocIndexer
 
         return LocIndexer(self)
 
@@ -2404,7 +2408,7 @@ Expr={expr}"""
         parallel=False,
         engine_kwargs=None,
     ):
-        from dask_expr.io.sql import to_sql
+        from dask.dataframe.dask_expr.io.sql import to_sql
 
         return to_sql(
             self,
@@ -2424,18 +2428,18 @@ Expr={expr}"""
 
     def to_orc(self, path, *args, **kwargs):
         """See dd.to_orc docstring for more information"""
-        from dask_expr.io.orc import to_orc
+        from dask.dataframe.dask_expr.io.orc import to_orc
 
         return to_orc(self, path, *args, **kwargs)
 
     def to_csv(self, filename, **kwargs):
         """See dd.to_csv docstring for more information"""
-        from dask_expr.io.csv import to_csv
+        from dask.dataframe.dask_expr.io.csv import to_csv
 
         return to_csv(self, filename, **kwargs)
 
     def to_records(self, index=False, lengths=None):
-        from dask_expr.io.records import to_records
+        from dask.dataframe.dask_expr.io.records import to_records
 
         if lengths is True:
             lengths = tuple(self.map_partitions(len).compute())
@@ -2473,13 +2477,13 @@ Expr={expr}"""
 
     def to_bag(self, index=False, format="tuple"):
         """Create a Dask Bag from a Series"""
-        from dask_expr.io.bag import to_bag
+        from dask.dataframe.dask_expr.io.bag import to_bag
 
         return to_bag(self, index, format=format)
 
     def to_hdf(self, path_or_buf, key, mode="a", append=False, **kwargs):
         """See dd.to_hdf docstring for more information"""
-        from dask_expr.io.hdf import to_hdf
+        from dask.dataframe.dask_expr.io.hdf import to_hdf
 
         return to_hdf(self, path_or_buf, key, mode, append, **kwargs)
 
@@ -2521,7 +2525,7 @@ Expr={expr}"""
         -------
         DataFrame, Series or Index
         """
-        from dask_expr._backends import dataframe_creation_dispatch
+        from dask.dataframe.dask_expr._backends import dataframe_creation_dispatch
 
         # Get desired backend
         backend = backend or dataframe_creation_dispatch.backend
@@ -2713,7 +2717,7 @@ class DataFrame(FrameBase):
         return iter(self._meta)
 
     def __dataframe__(self, *args, **kwargs):
-        from dask_expr._interchange import DaskDataFrameInterchange
+        from dask.dataframe.dask_expr._interchange import DaskDataFrameInterchange
 
         return DaskDataFrameInterchange(self)
 
@@ -3012,7 +3016,7 @@ class DataFrame(FrameBase):
     def groupby(
         self, by, group_keys=True, sort=None, observed=None, dropna=None, **kwargs
     ):
-        from dask_expr._groupby import GroupBy
+        from dask.dataframe.dask_expr._groupby import GroupBy
 
         if isinstance(by, FrameBase) and not isinstance(by, Series):
             raise ValueError(
@@ -3303,7 +3307,7 @@ class DataFrame(FrameBase):
         return new_collection(expr.Drop(self, columns=columns, errors=errors))
 
     def to_parquet(self, path, **kwargs):
-        from dask_expr.io.parquet import to_parquet
+        from dask.dataframe.dask_expr.io.parquet import to_parquet
 
         return to_parquet(self, path, **kwargs)
 
@@ -3711,7 +3715,7 @@ class DataFrame(FrameBase):
         --------
         >>> df.iloc[:, [2, 0, 1]]  # doctest: +SKIP
         """
-        from dask_expr._indexing import ILocIndexer
+        from dask.dataframe.dask_expr._indexing import ILocIndexer
 
         return ILocIndexer(self)
 
@@ -3784,7 +3788,7 @@ class DataFrame(FrameBase):
         if not len(columns) and index is False:
             return df
 
-        from dask_expr._collection import new_collection
+        from dask.dataframe.dask_expr._collection import new_collection
 
         # Eagerly compute the categories
         categories, index = new_collection(
@@ -4442,7 +4446,7 @@ class Series(FrameBase):
 
     @derived_from(pd.Series)
     def groupby(self, by, **kwargs):
-        from dask_expr._groupby import SeriesGroupBy
+        from dask.dataframe.dask_expr._groupby import SeriesGroupBy
 
         return SeriesGroupBy(self, by, **kwargs)
 
@@ -4906,7 +4910,7 @@ def from_pandas(data, npartitions=None, sort=True, chunksize=None):
             "Please provide chunksize as an int, or possibly as None if you specify npartitions."
         )
 
-    from dask_expr.io.io import FromPandas
+    from dask.dataframe.dask_expr.io.io import FromPandas
 
     return new_collection(
         FromPandas(
@@ -4957,7 +4961,7 @@ def from_array(arr, chunksize=50_000, columns=None, meta=None):
     if isinstance(arr, da.Array):
         return from_dask_array(arr, columns=columns, meta=meta)
 
-    from dask_expr.io.io import FromArray
+    from dask.dataframe.dask_expr.io.io import FromArray
 
     result = FromArray(
         arr,
@@ -4971,7 +4975,7 @@ def from_array(arr, chunksize=50_000, columns=None, meta=None):
 
 
 def from_graph(*args, **kwargs):
-    from dask_expr.io.io import FromGraph
+    from dask.dataframe.dask_expr.io.io import FromGraph
 
     return new_collection(FromGraph(*args, **kwargs))
 
@@ -5353,7 +5357,7 @@ def read_parquet(
     to_parquet
     pyarrow.parquet.ParquetDataset
     """
-    from dask_expr.io.parquet import (
+    from dask.dataframe.dask_expr.io.parquet import (
         ReadParquetFSSpec,
         ReadParquetPyarrowFS,
         _set_parquet_engine,
@@ -5772,7 +5776,7 @@ def merge_asof(
     if left_by is not None and right_by is None:
         raise ValueError("Must specify both left_on and right_on if one is specified.")
 
-    from dask_expr._merge_asof import MergeAsof
+    from dask.dataframe.dask_expr._merge_asof import MergeAsof
 
     return new_collection(MergeAsof(left, right, **kwargs))
 
@@ -5916,8 +5920,7 @@ def from_map(
     dtype: int64
     Dask Name: myfunc, 6 tasks
     """
-    from dask_expr.io import FromMap, FromMapProjectable
-
+    from dask.dataframe.dask_expr.io import FromMap, FromMapProjectable
     from dask.dataframe.io.utils import DataFrameIOFunction
 
     if "token" in kwargs:

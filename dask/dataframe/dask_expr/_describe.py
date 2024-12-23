@@ -3,11 +3,18 @@ from __future__ import annotations
 import functools
 
 import numpy as np
-from dask_expr._expr import Blockwise, DropnaSeries, Filter, Head, Sqrt, ToNumeric
-from dask_expr._quantile import SeriesQuantile
-from dask_expr._reductions import Reduction, Size, ValueCounts
 from pandas.core.dtypes.common import is_datetime64_any_dtype, is_timedelta64_dtype
 
+from dask.dataframe.dask_expr._expr import (
+    Blockwise,
+    DropnaSeries,
+    Filter,
+    Head,
+    Sqrt,
+    ToNumeric,
+)
+from dask.dataframe.dask_expr._quantile import SeriesQuantile
+from dask.dataframe.dask_expr._reductions import Reduction, Size, ValueCounts
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.dataframe.methods import (
     describe_nonnumeric_aggregate,

@@ -3,9 +3,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from dask_expr import Index, from_pandas
-from dask_expr.tests._util import _backend_library, assert_eq
 
 import dask.array as da
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 pd = _backend_library()
 

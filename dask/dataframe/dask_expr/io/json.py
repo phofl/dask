@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pandas as pd
-from dask_expr._backends import dataframe_creation_dispatch
 
+from dask.dataframe.dask_expr._backends import dataframe_creation_dispatch
 from dask.dataframe.utils import insert_meta_param_description
 
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import toolz
-from dask_expr.array.core import Array
 
 from dask.array.optimization import fuse_slice
 from dask.array.slicing import normalize_slice, slice_array
 from dask.array.utils import meta_from_array
+from dask.dataframe.dask_expr.array.core import Array
 from dask.utils import cached_property
 
 
@@ -67,4 +67,4 @@ class Slice(Array):
                 return self.array.substitute(self.array.array, self.array.array[new])
 
 
-from dask_expr.array.blockwise import Elemwise, Transpose
+from dask.dataframe.dask_expr.array.blockwise import Elemwise, Transpose

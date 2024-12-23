@@ -106,7 +106,7 @@ class _AnalyzeWorkerPlugin(WorkerPlugin):
         self._statistics = defaultdict(Statistics)
 
     def setup(self, worker: Worker) -> None:
-        self._digests = defaultdict(lambda: defaultdict(lambda: defaultdict(Digest)))
+        self._digests = defaultdict(lambda: defaultdict(lambda: defaultdict(Digest)))  # type: ignore
         self._worker = worker
         self._worker.handlers["analyze_get_statistics"] = self.get_statistics
 
@@ -128,7 +128,7 @@ def get_worker_plugin() -> _AnalyzeWorkerPlugin:
         ) from e
 
     try:
-        return worker.plugins["analyze"]  # type: ignore
+        return worker.plugins["analyze"]
     except KeyError as e:
         raise RuntimeError(
             f"The worker {worker.address} does not have an Analyze plugin."

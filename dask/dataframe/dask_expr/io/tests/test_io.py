@@ -17,14 +17,14 @@ from dask_expr import (
     read_csv,
     read_parquet,
 )
-from dask_expr._expr import Replace
-from dask_expr.io import FromArray, FromMap, ReadParquet, parquet
-from dask_expr.tests._util import _backend_library
 
 import dask.array as da
 import dask.dataframe as dd
 from dask import config
 from dask.array.utils import assert_eq as array_assert_eq
+from dask.dataframe.dask_expr._expr import Replace
+from dask.dataframe.dask_expr.io import FromArray, FromMap, ReadParquet, parquet
+from dask.dataframe.dask_expr.tests._util import _backend_library
 from dask.dataframe.utils import assert_eq, make_meta
 
 # Set DataFrame backend for this module

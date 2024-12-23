@@ -3,11 +3,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from dask_expr import Repartition, from_pandas, map_partitions, merge
-from dask_expr._merge import BroadcastJoin
-from dask_expr._shuffle import P2PShuffle, TaskShuffle
-from dask_expr.tests._util import _backend_library
 
 import dask
+from dask.dataframe.dask_expr._merge import BroadcastJoin
+from dask.dataframe.dask_expr._shuffle import P2PShuffle, TaskShuffle
+from dask.dataframe.dask_expr.tests._util import _backend_library
 
 distributed = pytest.importorskip("distributed")
 

@@ -4,7 +4,8 @@ import os
 
 import pytest
 from dask_expr import read_parquet
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 distributed = pytest.importorskip("distributed")
 

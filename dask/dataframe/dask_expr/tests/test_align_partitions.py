@@ -6,10 +6,11 @@ from itertools import product
 import numpy as np
 import pytest
 from dask_expr import from_pandas
-from dask_expr._expr import OpAlignPartitions
-from dask_expr._repartition import RepartitionDivisions
-from dask_expr._shuffle import Shuffle, divisions_lru
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr._expr import OpAlignPartitions
+from dask.dataframe.dask_expr._repartition import RepartitionDivisions
+from dask.dataframe.dask_expr._shuffle import Shuffle, divisions_lru
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()

@@ -5,8 +5,10 @@ from collections import namedtuple
 from numbers import Integral
 
 import pandas as pd
-from dask_expr._collection import new_collection
-from dask_expr._expr import (
+from pandas.core.window import Rolling as pd_Rolling
+
+from dask.dataframe.dask_expr._collection import new_collection
+from dask.dataframe.dask_expr._expr import (
     Blockwise,
     Expr,
     MapOverlap,
@@ -14,11 +16,9 @@ from dask_expr._expr import (
     determine_column_projection,
     make_meta,
 )
-from pandas.core.window import Rolling as pd_Rolling
-
 from dask.utils import derived_from
 
-BlockwiseDep = namedtuple(typename="BlockwiseDep", field_names=["iterable"])
+BlockwiseDep = namedtuple(typename="BlockwiseDep", field_names=["iterable"])  # type: ignore
 
 
 def _rolling_agg(
@@ -59,7 +59,7 @@ class RollingReduction(Expr):
         "groupby_kwargs": None,
         "groupby_slice": None,
     }
-    how = None
+    how: str | None = None
 
     @functools.cached_property
     def npartitions(self):

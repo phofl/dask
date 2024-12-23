@@ -7,17 +7,17 @@ import numpy as np
 import pandas as pd
 import pytest
 from dask_expr import from_array, from_graph, from_pandas, read_parquet
-from dask_expr._expr import Filter, Lengths, Literal
-from dask_expr._reductions import Len
-from dask_expr.io import FusedParquetIO, ReadParquet
-from dask_expr.io.parquet import (
+from pyarrow import fs
+
+import dask
+from dask.dataframe.dask_expr._expr import Filter, Lengths, Literal
+from dask.dataframe.dask_expr._reductions import Len
+from dask.dataframe.dask_expr.io import FusedParquetIO, ReadParquet
+from dask.dataframe.dask_expr.io.parquet import (
     _aggregate_statistics_to_file,
     _combine_stats,
     _extract_stats,
 )
-from pyarrow import fs
-
-import dask
 from dask.dataframe.utils import assert_eq
 from dask.utils import key_split
 

@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from dask_expr import from_pandas
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 pd = _backend_library()
 

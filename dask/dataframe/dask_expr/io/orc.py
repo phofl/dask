@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dask_expr._backends import dataframe_creation_dispatch
+from dask.dataframe.dask_expr._backends import dataframe_creation_dispatch
 
 
 @dataframe_creation_dispatch.register_inplace("pandas")

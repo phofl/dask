@@ -23,16 +23,21 @@ from dask_expr import (
     to_numeric,
     to_timedelta,
 )
-from dask_expr._expr import Filter, OpAlignPartitions, ToFrame, are_co_aligned
-from dask_expr._reductions import Len
-from dask_expr._shuffle import Shuffle
-from dask_expr.datasets import timeseries
-from dask_expr.io import FromPandas
-from dask_expr.tests._util import _backend_library, assert_eq, xfail_gpu
 
 import dask
 import dask.array as da
 from dask.dataframe._compat import PANDAS_GE_210, PANDAS_GE_220
+from dask.dataframe.dask_expr._expr import (
+    Filter,
+    OpAlignPartitions,
+    ToFrame,
+    are_co_aligned,
+)
+from dask.dataframe.dask_expr._reductions import Len
+from dask.dataframe.dask_expr._shuffle import Shuffle
+from dask.dataframe.dask_expr.datasets import timeseries
+from dask.dataframe.dask_expr.io import FromPandas
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq, xfail_gpu
 from dask.dataframe.utils import UNKNOWN_CATEGORIES
 from dask.utils import M
 
@@ -2227,7 +2232,7 @@ def test_expr_is_scalar(df):
 
 
 def test_replace_filtered_combine_similar():
-    from dask_expr._expr import Filter, Replace
+    from dask.dataframe.dask_expr._expr import Filter, Replace
 
     pdf = pd.DataFrame({"a": [1, 2, 3, 4, 5, 6], "b": 1, "c": 2})
 

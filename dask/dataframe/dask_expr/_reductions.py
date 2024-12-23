@@ -6,20 +6,6 @@ from collections.abc import Callable
 import numpy as np
 import pandas as pd
 import toolz
-from dask_expr._concat import Concat
-from dask_expr._expr import (
-    Blockwise,
-    Expr,
-    Index,
-    Projection,
-    RenameFrame,
-    RenameSeries,
-    ResetIndex,
-    ToFrame,
-    determine_column_projection,
-    plain_column_projection,
-)
-from dask_expr._util import _tokenize_deterministic, is_scalar
 
 from dask.array import chunk
 from dask.array.reductions import moment_agg, moment_chunk, moment_combine, nannumel
@@ -38,6 +24,20 @@ from dask.dataframe.core import (
     is_series_like,
     total_mem_usage,
 )
+from dask.dataframe.dask_expr._concat import Concat
+from dask.dataframe.dask_expr._expr import (
+    Blockwise,
+    Expr,
+    Index,
+    Projection,
+    RenameFrame,
+    RenameSeries,
+    ResetIndex,
+    ToFrame,
+    determine_column_projection,
+    plain_column_projection,
+)
+from dask.dataframe.dask_expr._util import _tokenize_deterministic, is_scalar
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.typing import no_default
 from dask.utils import M, apply, funcname
@@ -169,8 +169,12 @@ class ShuffleReduce(Expr):
             return 1
 
     def _lower(self):
-        from dask_expr._repartition import Repartition
-        from dask_expr._shuffle import RearrangeByColumn, SetIndexBlockwise, SortValues
+        from dask.dataframe.dask_expr._repartition import Repartition
+        from dask.dataframe.dask_expr._shuffle import (
+            RearrangeByColumn,
+            SetIndexBlockwise,
+            SortValues,
+        )
 
         if is_index_like(self.frame._meta):
             columns = [
@@ -410,13 +414,13 @@ class ApplyConcatApply(Expr):
     """
 
     _parameters = ["frame"]
-    chunk = None
-    combine = None
-    aggregate = None
-    chunk_kwargs = {}
-    combine_kwargs = {}
-    aggregate_args = []
-    aggregate_kwargs = {}
+    chunk: Callable | None = None
+    combine: Callable | None = None
+    aggregate: Callable | None = None
+    chunk_kwargs: dict = {}
+    combine_kwargs: dict = {}
+    aggregate_args: list = []
+    aggregate_kwargs: dict = {}
     _chunk_cls = Chunk
 
     @property
@@ -593,11 +597,11 @@ class Unique(ApplyConcatApply):
         return self.chunk_kwargs
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         return _concat(inputs)
 
     @classmethod
-    def aggregate(cls, inputs: list, **kwargs):
+    def aggregate(cls, inputs: list, **kwargs):  # type: ignore
         df = _concat(inputs)
         return cls.aggregate_func(df, **kwargs)
 
@@ -735,13 +739,13 @@ class PivotTableAbstract(ApplyConcatApply):
         }
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         return _concat(inputs)
 
     @classmethod
-    def aggregate(cls, inputs: list, **kwargs):
+    def aggregate(cls, inputs: list, **kwargs):  # type: ignore
         df = _concat(inputs)
-        return cls.aggregate_func(df, **kwargs)
+        return cls.aggregate_func(df, **kwargs)  # type: ignore
 
 
 class PivotTableSum(PivotTableAbstract):
@@ -785,9 +789,9 @@ class Reduction(ApplyConcatApply):
         "min_count": 0,
         "dropna": True,
     }
-    reduction_chunk = None
-    reduction_combine = None
-    reduction_aggregate = None
+    reduction_chunk: Callable | None = None
+    reduction_combine: Callable | None = None
+    reduction_aggregate: Callable | None = None
 
     @property
     def _projection_columns(self):
@@ -800,10 +804,10 @@ class Reduction(ApplyConcatApply):
         return out.to_frame().T if is_series_like(out) else out
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         func = cls.reduction_combine or cls.reduction_aggregate or cls.reduction_chunk
         df = _concat(inputs)
-        out = func(df, **kwargs)
+        out = func(df, **kwargs)  # type: ignore
         # Return a dataframe so that the concatenated version is also a dataframe
         return out.to_frame().T if is_series_like(out) else out
 
@@ -862,7 +866,7 @@ class CustomReduction(Reduction):
         return out.to_frame().T if is_series_like(out) else out
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         func = kwargs.pop("func")
         df = _concat(inputs)
         out = func(df, **kwargs)
@@ -1047,7 +1051,7 @@ class Len(Reduction):
     reduction_aggregate = sum
 
     def _simplify_down(self):
-        from dask_expr.io.io import IO
+        from dask.dataframe.dask_expr.io.io import IO
 
         # We introduce Index nodes sometimes.  We special case around them.
         if isinstance(self.frame, Index) and self.frame.frame._is_length_preserving:
@@ -1105,9 +1109,9 @@ class ArrayReduction(Reduction):
         return cls.reduction_chunk(df, **kwargs)
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         func = cls.reduction_combine or cls.reduction_aggregate or cls.reduction_chunk
-        return func(inputs, **kwargs)
+        return func(inputs, **kwargs)  # type: ignore
 
     @classmethod
     def aggregate(cls, inputs, meta, index, **kwargs):
@@ -1334,10 +1338,10 @@ class ReductionConstantDim(Reduction):
         return cls.reduction_chunk(df, **kwargs)
 
     @classmethod
-    def combine(cls, inputs: list, **kwargs):
+    def combine(cls, inputs: list, **kwargs):  # type: ignore
         func = cls.reduction_combine or cls.reduction_aggregate or cls.reduction_chunk
         df = _concat(inputs)
-        return func(df, **kwargs)
+        return func(df, **kwargs)  # type: ignore
 
     def _divisions(self):
         # TODO: We can do better in some cases
@@ -1459,10 +1463,6 @@ class ValueCounts(ReductionConstantDim):
     def _simplify_up(self, parent, dependents):
         # We are already a Series
         return
-
-    @functools.cached_property
-    def split_by(self):
-        return self.frame._meta.name
 
     def _divisions(self):
         if self.sort:

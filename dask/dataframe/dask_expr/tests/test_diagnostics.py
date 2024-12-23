@@ -7,9 +7,10 @@ import pytest
 pytest.importorskip("distributed")
 
 from dask_expr import from_pandas
-from dask_expr.tests._util import _backend_library
 
 from distributed.utils_test import *  # noqa
+
+from dask.dataframe.dask_expr.tests._util import _backend_library
 
 # Set DataFrame backend for this module
 pd = _backend_library()

@@ -5,8 +5,8 @@ from datetime import datetime
 import numpy as np
 import pytest
 from dask_expr import from_pandas
-from dask_expr.tests._util import _backend_library, assert_eq, xfail_gpu
 
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq, xfail_gpu
 from dask.utils import M
 
 # Set DataFrame backend for this module

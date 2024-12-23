@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dask_expr import from_pandas
-from dask_expr.tests._util import _backend_library
 from pandas.core.interchange.dataframe_protocol import DtypeKind
+
+from dask.dataframe.dask_expr.tests._util import _backend_library
 
 # Set DataFrame backend for this module
 pd = _backend_library()

@@ -8,7 +8,12 @@ import uuid
 import numpy as np
 import pandas as pd
 import tlz as toolz
-from dask_expr._expr import (
+from pandas import CategoricalDtype
+
+from dask import compute
+from dask._task_spec import Task, TaskRef
+from dask.dataframe.core import _concat
+from dask.dataframe.dask_expr._expr import (
     Assign,
     Blockwise,
     Expr,
@@ -19,7 +24,7 @@ from dask_expr._expr import (
     determine_column_projection,
     is_filter_pushdown_available,
 )
-from dask_expr._reductions import (
+from dask.dataframe.dask_expr._reductions import (
     All,
     Any,
     Count,
@@ -41,13 +46,8 @@ from dask_expr._reductions import (
     Unique,
     ValueCounts,
 )
-from dask_expr._repartition import Repartition, RepartitionToFewer
-from dask_expr._util import LRU, _convert_to_list
-from pandas import CategoricalDtype
-
-from dask import compute
-from dask._task_spec import Task, TaskRef
-from dask.dataframe.core import _concat
+from dask.dataframe.dask_expr._repartition import Repartition, RepartitionToFewer
+from dask.dataframe.dask_expr._util import LRU, _convert_to_list
 from dask.dataframe.dispatch import is_categorical_dtype, make_meta
 from dask.dataframe.shuffle import (
     barrier,
@@ -724,7 +724,7 @@ class AssignPartitioningIndex(Blockwise):
     _preserves_partitioning_information = True
 
     @staticmethod
-    def operation(df, index, name: str, npartitions: int, meta, index_shuffle: bool):
+    def operation(df, index, name: str, npartitions: int, meta, index_shuffle: bool):  # type: ignore
         """Construct a hash-based partitioning index"""
 
         def _get_index(idx, obj):
@@ -913,7 +913,7 @@ class SetIndex(BaseSetIndexSortValues):
         )
 
     def _simplify_up(self, parent, dependents):
-        from dask_expr._expr import Filter, Head, Tail
+        from dask.dataframe.dask_expr._expr import Filter, Head, Tail
 
         # TODO, handle setting index with other frame
         if (
@@ -954,7 +954,7 @@ class SetIndex(BaseSetIndexSortValues):
 
     def _filter_passthrough_available(self, parent, dependents):
         if is_filter_pushdown_available(self, parent, dependents):
-            from dask_expr._expr import Index
+            from dask.dataframe.dask_expr._expr import Index
 
             p = parent.predicate
             return not any(isinstance(x, Index) for x in p.walk())
@@ -1081,7 +1081,7 @@ class SortValues(BaseSetIndexSortValues):
         )
 
     def _simplify_up(self, parent, dependents):
-        from dask_expr._expr import Filter, Head, Tail
+        from dask.dataframe.dask_expr._expr import Filter, Head, Tail
 
         if isinstance(parent, Head):
             return NFirst(
@@ -1311,7 +1311,7 @@ class SetIndexBlockwise(Blockwise):
             )
 
 
-divisions_lru = LRU(10)
+divisions_lru = LRU(10)  # type: ignore
 
 
 def _get_divisions(
@@ -1374,7 +1374,7 @@ def _calculate_divisions(
         else:
             raise e
 
-    sizes = []
+    sizes = []  # type: ignore
 
     empty_dataframe_detected = pd.isna(divisions).all()
     if empty_dataframe_detected:

@@ -5,13 +5,13 @@ import warnings
 import numpy as np
 import pytest
 from dask_expr import Merge, from_delayed, from_dict, from_pandas, merge, repartition
-from dask_expr._expr import Filter, Projection
-from dask_expr._merge import BroadcastJoin
-from dask_expr._shuffle import Shuffle
-from dask_expr.io import FromPandas
-from dask_expr.tests._util import _backend_library, assert_eq
 
 from dask import delayed
+from dask.dataframe.dask_expr._expr import Filter, Projection
+from dask.dataframe.dask_expr._merge import BroadcastJoin
+from dask.dataframe.dask_expr._shuffle import Shuffle
+from dask.dataframe.dask_expr.io import FromPandas
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()

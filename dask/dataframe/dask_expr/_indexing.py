@@ -6,21 +6,21 @@ from collections.abc import Callable
 import numpy as np
 import pandas as pd
 from dask_expr import from_dask_array
-from dask_expr._collection import Series, new_collection
-from dask_expr._expr import (
-    Blockwise,
-    MaybeAlignPartitions,
-    Partitions,
-    Projection,
-    are_co_aligned,
-)
-from dask_expr._util import is_scalar
 from pandas.api.types import is_bool_dtype
 from pandas.errors import IndexingError
 
 from dask._task_spec import Alias, DataNode, Task, TaskRef, convert_legacy_graph
 from dask.array import Array
 from dask.dataframe import methods
+from dask.dataframe.dask_expr._collection import Series, new_collection
+from dask.dataframe.dask_expr._expr import (
+    Blockwise,
+    MaybeAlignPartitions,
+    Partitions,
+    Projection,
+    are_co_aligned,
+)
+from dask.dataframe.dask_expr._util import is_scalar
 from dask.dataframe.dispatch import meta_nonempty
 from dask.dataframe.indexing import (
     _coerce_loc_index,
@@ -178,7 +178,7 @@ class LocBase(Blockwise):
     def _task(self, name: Key, index: int) -> Task:
         t = self._layer_cache[(self._name, index)]
         if isinstance(t, Alias):
-            return Alias(name, t.target)
+            return Alias(name, t.target)  # type: ignore
         elif t.key != name:
             return Task(name, lambda x: x, t)
         return t
@@ -363,7 +363,7 @@ class LocSlice(LocBase):
         }
         for i in range(1, self.stop - self.start):
             if self.cindexer is None:
-                dsk[self._name, i] = Alias((self.frame._name, self.start + i))
+                dsk[self._name, i] = Alias((self.frame._name, self.start + i))  # type: ignore
             else:
                 dsk[self._name, i] = Task(
                     (self._name, i),

@@ -4,22 +4,22 @@ import functools
 from collections import namedtuple
 
 import numpy as np
-from dask_expr._collection import new_collection
-from dask_expr._expr import (
+from pandas.core.resample import Resampler as pd_Resampler
+
+from dask.dataframe.dask_expr._collection import new_collection
+from dask.dataframe.dask_expr._expr import (
     Blockwise,
     Expr,
     Projection,
     make_meta,
     plain_column_projection,
 )
-from dask_expr._repartition import Repartition
-from pandas.core.resample import Resampler as pd_Resampler
-
+from dask.dataframe.dask_expr._repartition import Repartition
 from dask.dataframe.dispatch import meta_nonempty
 from dask.dataframe.tseries.resample import _resample_bin_and_out_divs, _resample_series
 from dask.utils import derived_from
 
-BlockwiseDep = namedtuple(typename="BlockwiseDep", field_names=["iterable"])
+BlockwiseDep = namedtuple(typename="BlockwiseDep", field_names=["iterable"])  # type: ignore
 
 
 class ResampleReduction(Expr):
@@ -37,7 +37,7 @@ class ResampleReduction(Expr):
         "how_args": (),
         "how_kwargs": None,
     }
-    how = None
+    how: str | None = None
     fill_value = np.nan
 
     @functools.cached_property

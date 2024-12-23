@@ -4,17 +4,23 @@ import functools
 from collections.abc import Callable
 from operator import getitem
 from pprint import pformat
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from dask_expr._expr import Expr, Filter, Projection, plain_column_projection
-from dask_expr._reductions import TotalMemoryUsageFrame
-from dask_expr._util import LRU
 from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 from tlz import unique
 
 from dask.dataframe import methods
 from dask.dataframe.core import _concat, _map_freq_to_period_start, split_evenly
+from dask.dataframe.dask_expr._expr import (
+    Expr,
+    Filter,
+    Projection,
+    plain_column_projection,
+)
+from dask.dataframe.dask_expr._reductions import TotalMemoryUsageFrame
+from dask.dataframe.dask_expr._util import LRU
 from dask.dataframe.utils import is_series_like
 from dask.tokenize import tokenize
 from dask.utils import iter_chunks, parse_bytes
@@ -441,7 +447,7 @@ class RepartitionSize(Repartition):
 
     def _layer(self) -> dict:
         df = self.frame
-        dsk = {}
+        dsk: dict[tuple, Any] = {}
 
         if np.any(self._nsplits > 1):
             split_name = f"split-{tokenize(df, self._nsplits)}"
@@ -483,7 +489,7 @@ def _clean_new_division_boundaries(new_partitions_boundaries, frame_npartitions)
     return new_partitions_boundaries
 
 
-mem_usages_lru = LRU(10)
+mem_usages_lru = LRU(10)  # type: ignore
 
 
 def _get_mem_usages(frame):
@@ -495,6 +501,6 @@ def _get_mem_usages(frame):
 
 
 def _compute_mem_usages(frame):
-    from dask_expr._collection import new_collection
+    from dask.dataframe.dask_expr._collection import new_collection
 
     return new_collection(TotalMemoryUsageFrame(frame, deep=True)).compute()

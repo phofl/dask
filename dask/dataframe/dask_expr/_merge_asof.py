@@ -4,12 +4,12 @@ import functools
 
 import pandas as pd
 from dask_expr import SetIndexBlockwise, new_collection
-from dask_expr._expr import MapPartitions, RenameAxis, ResetIndex
-from dask_expr._merge import Merge
-from dask_expr._util import _BackendData
-from dask_expr.io import FromPandas
 
 from dask.dataframe import methods
+from dask.dataframe.dask_expr._expr import MapPartitions, RenameAxis, ResetIndex
+from dask.dataframe.dask_expr._merge import Merge
+from dask.dataframe.dask_expr._util import _BackendData
+from dask.dataframe.dask_expr.io import FromPandas
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.dataframe.multi import merge_asof_padded, pair_partitions
 from dask.dataframe.utils import pyarrow_strings_enabled

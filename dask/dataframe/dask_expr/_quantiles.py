@@ -4,8 +4,8 @@ import functools
 
 import numpy as np
 import toolz
-from dask_expr._expr import Expr
 
+from dask.dataframe.dask_expr._expr import Expr
 from dask.dataframe.partitionquantiles import (
     create_merge_tree,
     dtype_info,

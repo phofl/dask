@@ -6,7 +6,12 @@ import operator
 
 import numpy as np
 import pyarrow as pa
-from dask_expr._expr import (
+
+from dask._task_spec import List, Task
+from dask.dataframe import methods
+from dask.dataframe._pyarrow import to_pyarrow_string
+from dask.dataframe.core import apply_and_enforce, is_dataframe_like
+from dask.dataframe.dask_expr._expr import (
     Blockwise,
     Expr,
     Lengths,
@@ -16,13 +21,12 @@ from dask_expr._expr import (
     determine_column_projection,
     no_default,
 )
-from dask_expr._reductions import Len
-from dask_expr._util import _BackendData, _convert_to_list, _tokenize_deterministic
-
-from dask._task_spec import List, Task
-from dask.dataframe import methods
-from dask.dataframe._pyarrow import to_pyarrow_string
-from dask.dataframe.core import apply_and_enforce, is_dataframe_like
+from dask.dataframe.dask_expr._reductions import Len
+from dask.dataframe.dask_expr._util import (
+    _BackendData,
+    _convert_to_list,
+    _tokenize_deterministic,
+)
 from dask.dataframe.dispatch import make_meta
 from dask.dataframe.io.io import _meta_from_array, sorted_division_locations
 from dask.typing import Key
@@ -172,7 +176,7 @@ class FusedParquetIO(FusedIO):
         schema,
         **to_pandas_kwargs,
     ):
-        from dask_expr.io.parquet import ReadParquetPyarrowFS
+        from dask.dataframe.dask_expr.io.parquet import ReadParquetPyarrowFS
 
         tables = (
             ReadParquetPyarrowFS._fragment_to_table(
@@ -186,7 +190,7 @@ class FusedParquetIO(FusedIO):
         table = pa.concat_tables(tables, promote_options="permissive")
         return ReadParquetPyarrowFS._table_to_pandas(table, **to_pandas_kwargs)
 
-    def _task(self, name: str, index: int) -> Task:
+    def _task(self, name: str, index: int) -> Task:  # type: ignore
         expr = self.operand("_expr")
         bucket = self._fusion_buckets[index]
         fragments_filters = []

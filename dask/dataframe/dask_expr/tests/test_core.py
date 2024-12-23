@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from dask_expr._core import Expr
+
+from dask.dataframe.dask_expr._core import Expr
 
 
 class ExprB(Expr):

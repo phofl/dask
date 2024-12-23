@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import pandas as pd
-from dask_expr._collection import DataFrame, Series, new_collection
-from dask_expr._expr import Blockwise
 
 import dask.dataframe.methods as methods
+from dask.dataframe.dask_expr._collection import DataFrame, Series, new_collection
+from dask.dataframe.dask_expr._expr import Blockwise
 from dask.dataframe.utils import has_known_categories
 from dask.utils import get_meta_library
 

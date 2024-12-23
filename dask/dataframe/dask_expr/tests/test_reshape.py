@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pytest
 from dask_expr import from_pandas, pivot_table
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pytest
 from dask_expr import from_pandas
-from dask_expr._categorical import GetCategories
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr._categorical import GetCategories
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()

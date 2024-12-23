@@ -4,7 +4,11 @@ import functools
 import warnings
 
 import pandas as pd
-from dask_expr._expr import (
+from toolz import merge_sorted, unique
+
+from dask.core import flatten
+from dask.dataframe import methods
+from dask.dataframe.dask_expr._expr import (
     AsType,
     Blockwise,
     Expr,
@@ -13,11 +17,7 @@ from dask_expr._expr import (
     are_co_aligned,
     determine_column_projection,
 )
-from dask_expr._util import _convert_to_list
-from toolz import merge_sorted, unique
-
-from dask.core import flatten
-from dask.dataframe import methods
+from dask.dataframe.dask_expr._util import _convert_to_list
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.dataframe.multi import concat_and_check
 from dask.dataframe.utils import check_meta, strip_unknown_categories
@@ -157,7 +157,7 @@ class Concat(Expr):
                     self.ignore_order, self._kwargs, self.axis, self.join, *dfs
                 )
             elif self._all_known_divisions:
-                from dask_expr._repartition import Repartition
+                from dask.dataframe.dask_expr._repartition import Repartition
 
                 divs = self._divisions()
                 cast_dfs = [
@@ -210,7 +210,7 @@ class Concat(Expr):
             and self._all_known_divisions
             and self.interleave_partitions
         ):
-            from dask_expr._repartition import Repartition
+            from dask.dataframe.dask_expr._repartition import Repartition
 
             divs = self._divisions()
             cast_dfs = [

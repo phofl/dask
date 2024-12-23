@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dask_expr._collection import DataFrame
 from pandas.core.interchange.dataframe_protocol import DtypeKind
 
 from dask.dataframe._compat import is_string_dtype
+from dask.dataframe.dask_expr._collection import DataFrame
 from dask.dataframe.dispatch import is_categorical_dtype
 
 _NP_KINDS = {

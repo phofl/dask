@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dask_expr._accessor import Accessor
+from dask.dataframe.dask_expr._accessor import Accessor
 
 
 class DatetimeAccessor(Accessor):

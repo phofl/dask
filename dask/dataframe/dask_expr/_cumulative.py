@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import functools
 import math
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
-from dask_expr._expr import Blockwise, Expr, Projection, plain_column_projection
 
 from dask.dataframe import methods
+from dask.dataframe.dask_expr._expr import (
+    Blockwise,
+    Expr,
+    Projection,
+    plain_column_projection,
+)
 from dask.utils import M
 
 
@@ -15,8 +22,8 @@ class CumulativeAggregations(Expr):
     _defaults = {"axis": None}
 
     chunk_operation = None
-    aggregate_operation = None
-    neutral_element = None
+    aggregate_operation: Callable | None = None
+    neutral_element: int | None = None
 
     def _divisions(self):
         return self.frame._divisions()
@@ -81,7 +88,7 @@ class CumulativeFinalize(Expr):
         return self.frame._meta
 
     def _layer(self) -> dict:
-        dsk = {}
+        dsk: dict[tuple, Any] = {}
         frame, previous_partitions = self.frame, self.previous_partitions
         dsk[(self._name, 0)] = (frame._name, 0)
 
@@ -135,10 +142,10 @@ class CumProd(CumulativeAggregations):
 class CumMax(CumulativeAggregations):
     chunk_operation = M.cummax
     aggregate_operation = staticmethod(methods.cummax_aggregate)
-    neutral_element = -math.inf
+    neutral_element = -math.inf  # type: ignore
 
 
 class CumMin(CumulativeAggregations):
     chunk_operation = M.cummin
     aggregate_operation = staticmethod(methods.cummin_aggregate)
-    neutral_element = math.inf
+    neutral_element = math.inf  # type: ignore

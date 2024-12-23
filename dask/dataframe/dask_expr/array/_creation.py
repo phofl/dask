@@ -4,7 +4,6 @@ import functools
 from functools import partial
 
 import numpy as np
-from dask_expr.array import Array
 
 from dask.array.chunk import arange as _arange
 from dask.array.chunk import linspace as _linspace
@@ -12,6 +11,7 @@ from dask.array.core import normalize_chunks
 from dask.array.utils import meta_from_array
 from dask.array.wrap import _parse_wrap_args, broadcast_trick
 from dask.blockwise import blockwise as core_blockwise
+from dask.dataframe.dask_expr.array import Array
 from dask.layers import ArrayChunkShapeDep
 
 

@@ -1,8 +1,8 @@
 # isort: skip_file
 
-from dask_expr.array import random
-from dask_expr.array.core import Array, asarray, from_array
-from dask_expr.array.reductions import (
+from dask.dataframe.dask_expr.array import random
+from dask.dataframe.dask_expr.array.core import Array, asarray, from_array
+from dask.dataframe.dask_expr.array.reductions import (
     mean,
     moment,
     nanmean,
@@ -14,4 +14,10 @@ from dask_expr.array.reductions import (
     sum,
     var,
 )
-from dask_expr.array._creation import arange, linspace, ones, empty, zeros
+from dask.dataframe.dask_expr.array._creation import (
+    arange,
+    linspace,
+    ones,
+    empty,
+    zeros,
+)

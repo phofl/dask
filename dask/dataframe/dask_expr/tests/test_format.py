@@ -5,8 +5,8 @@ from textwrap import dedent
 
 import pytest
 from dask_expr import from_pandas
-from dask_expr.tests._util import _backend_library
 
+from dask.dataframe.dask_expr.tests._util import _backend_library
 from dask.utils import maybe_pluralize
 
 # Set DataFrame backend for this module

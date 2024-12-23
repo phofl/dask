@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import functools
 
-from dask_expr._expr import Elemwise, Expr
-
 from dask.dataframe.accessor import _bind_method, _bind_property, maybe_wrap_pandas
+from dask.dataframe.dask_expr._expr import Elemwise, Expr
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 
 
@@ -58,7 +57,7 @@ class Accessor:
         return maybe_wrap_pandas(obj, out)
 
     def _function_map(self, attr, *args, **kwargs):
-        from dask_expr._collection import Index, new_collection
+        from dask.dataframe.dask_expr._collection import Index, new_collection
 
         if isinstance(self._series, Index):
             return new_collection(
@@ -70,7 +69,7 @@ class Accessor:
         )
 
     def _property_map(self, attr, *args, **kwargs):
-        from dask_expr._collection import Index, new_collection
+        from dask.dataframe.dask_expr._collection import Index, new_collection
 
         if isinstance(self._series, Index):
             return new_collection(

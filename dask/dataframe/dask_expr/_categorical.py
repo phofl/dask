@@ -3,15 +3,15 @@ from __future__ import annotations
 import functools
 
 import pandas as pd
-from dask_expr._accessor import Accessor, PropertyMap
-from dask_expr._expr import Blockwise, Elemwise, Projection
-from dask_expr._reductions import ApplyConcatApply
 
 from dask.dataframe.categorical import (
     _categorize_block,
     _get_categories,
     _get_categories_agg,
 )
+from dask.dataframe.dask_expr._accessor import Accessor, PropertyMap
+from dask.dataframe.dask_expr._expr import Blockwise, Elemwise, Projection
+from dask.dataframe.dask_expr._reductions import ApplyConcatApply
 from dask.dataframe.utils import (
     AttributeNotImplementedError,
     clear_known_categories,
@@ -75,7 +75,7 @@ class CategoricalAccessor(Accessor):
         """
         if self.known:
             return self._series
-        from dask_expr._collection import new_collection
+        from dask.dataframe.dask_expr._collection import new_collection
 
         categories = (
             new_collection(PropertyMap(self._series, "cat", "categories"))
@@ -124,7 +124,7 @@ class CategoricalAccessor(Accessor):
                 "`df.categorize()` beforehand to ensure known categories"
             )
             raise AttributeNotImplementedError(msg)
-        from dask_expr._collection import new_collection
+        from dask.dataframe.dask_expr._collection import new_collection
 
         return new_collection(PropertyMap(self._series, "cat", "codes"))
 

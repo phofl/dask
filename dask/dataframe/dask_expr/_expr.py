@@ -7,17 +7,10 @@ import operator
 import warnings
 from collections import defaultdict
 from collections.abc import Callable, Mapping
+from typing import Any as AnyType
 
 import numpy as np
 import pandas as pd
-from dask_expr import _core as core
-from dask_expr._util import (
-    _calc_maybe_new_divisions,
-    _convert_to_list,
-    _tokenize_deterministic,
-    _tokenize_partial,
-    is_scalar,
-)
 from pandas.errors import PerformanceWarning
 from tlz import merge_sorted, partition, unique
 
@@ -37,6 +30,14 @@ from dask.dataframe.core import (
     is_series_like,
     safe_head,
     total_mem_usage,
+)
+from dask.dataframe.dask_expr import _core as core
+from dask.dataframe.dask_expr._util import (
+    _calc_maybe_new_divisions,
+    _convert_to_list,
+    _tokenize_deterministic,
+    _tokenize_partial,
+    is_scalar,
 )
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.dataframe.rolling import CombinedOutput, _head_timedelta, overlap_chunk
@@ -283,22 +284,22 @@ class Expr(core.Expr):
         return Count(self, numeric_only, split_every)
 
     def cumsum(self, skipna=True):
-        from dask_expr._cumulative import CumSum
+        from dask.dataframe.dask_expr._cumulative import CumSum
 
         return CumSum(self, skipna=skipna)
 
     def cumprod(self, skipna=True):
-        from dask_expr._cumulative import CumProd
+        from dask.dataframe.dask_expr._cumulative import CumProd
 
         return CumProd(self, skipna=skipna)
 
     def cummax(self, skipna=True):
-        from dask_expr._cumulative import CumMax
+        from dask.dataframe.dask_expr._cumulative import CumMax
 
         return CumMax(self, skipna=skipna)
 
     def cummin(self, skipna=True):
-        from dask_expr._cumulative import CumMin
+        from dask.dataframe.dask_expr._cumulative import CumMin
 
         return CumMin(self, skipna=skipna)
 
@@ -357,7 +358,7 @@ class Expr(core.Expr):
         return RenameAxis(self, mapper=mapper, index=index, columns=columns, axis=axis)
 
     def align(self, other, join="outer", axis=None, fill_value=None):
-        from dask_expr._collection import new_collection
+        from dask.dataframe.dask_expr._collection import new_collection
 
         if not are_co_aligned(self, other):
             aligned = AlignAlignPartitions(self, other, join, axis, fill_value)
@@ -1184,7 +1185,7 @@ class Sample(Blockwise):
 
 class Query(Blockwise):
     _parameters = ["frame", "_expr", "expr_kwargs"]
-    _defaults: dict[str, Any] = {"expr_kwargs": {}}
+    _defaults: dict[str, Any] = {"expr_kwargs": {}}  # type: ignore
     _keyword_only = ["expr_kwargs"]
     operation = M.query
 
@@ -1433,7 +1434,7 @@ class CombineSeries(Elemwise):
 
 class CombineFrame(CombineSeries):
     _parameters = CombineSeries._parameters + ["overwrite"]
-    _defaults = {"fill_value": None, "overwrite": True}  # type: ignore
+    _defaults = {"fill_value": None, "overwrite": True}
 
 
 class ToNumeric(Elemwise):
@@ -1642,14 +1643,14 @@ class ToFrame(Elemwise):
 
 class ToFrameIndex(ToFrame):
     _parameters = ["frame", "index", "name"]
-    _defaults = {"name": no_default, "index": True}  # type: ignore
+    _defaults = {"name": no_default, "index": True}
     _keyword_only = ["name", "index"]
     operation = M.to_frame
     _filter_passthrough = True
 
 
 class ToSeriesIndex(ToFrameIndex):
-    _defaults = {"name": no_default, "index": None}  # type: ignore
+    _defaults = {"name": no_default, "index": None}
     operation = M.to_series
     _preserves_partitioning_information = True
 
@@ -1721,7 +1722,7 @@ class Apply(Elemwise):
     """A good example of writing a less-trivial blockwise operation"""
 
     _parameters = ["frame", "function", "args", "meta", "kwargs"]
-    _defaults = {"args": (), "kwargs": {}}  # type: ignore
+    _defaults = {"args": (), "kwargs": {}}
     operation = M.apply
 
     @functools.cached_property
@@ -1953,7 +1954,7 @@ class Assign(Elemwise):
 
 class Eval(Elemwise):
     _parameters = ["frame", "_expr", "expr_kwargs"]
-    _defaults = {"expr_kwargs": {}}  # type: ignore
+    _defaults = {"expr_kwargs": {}}
     _keyword_only = ["expr_kwargs"]
     operation = M.eval
 
@@ -2911,7 +2912,8 @@ class Partitions(Expr):
 
     def _simplify_down(self):
         from dask_expr import SetIndexBlockwise
-        from dask_expr._resample import ResampleAggregation
+
+        from dask.dataframe.dask_expr._resample import ResampleAggregation
 
         if isinstance(self.frame, Blockwise) and not isinstance(
             self.frame, (BlockwiseIO, Fused, SetIndexBlockwise, ResampleAggregation)
@@ -3064,7 +3066,7 @@ def optimize_until(expr: Expr, stage: core.OptimizerStage) -> Expr:
         return result
 
     # Simplify
-    expr = result.simplify()
+    expr = result.simplify()  # type: ignore
     if stage == "simplified-logical":
         return expr
 
@@ -3074,12 +3076,12 @@ def optimize_until(expr: Expr, stage: core.OptimizerStage) -> Expr:
         return expr
 
     # Lower
-    expr = expr.lower_completely()
+    expr = expr.lower_completely()  # type: ignore
     if stage == "physical":
         return expr
 
     # Simplify again
-    expr = expr.simplify()
+    expr = expr.simplify()  # type: ignore
     if stage == "simplified-physical":
         return expr
 
@@ -3139,8 +3141,8 @@ def is_broadcastable(dfs, s):
 def are_co_aligned(*exprs):
     """Do inputs come from the same parents, modulo blockwise?"""
 
-    from dask_expr._cumulative import CumulativeAggregations
-    from dask_expr._reductions import Reduction
+    from dask.dataframe.dask_expr._cumulative import CumulativeAggregations
+    from dask.dataframe.dask_expr._reductions import Reduction
 
     seen = set()
     # Scalars can always be broadcasted
@@ -3290,7 +3292,7 @@ def optimize_blockwise_fusion(expr):
 
 class Diff(MapOverlap):
     _parameters = ["frame", "periods"]
-    _defaults = {"periods": 1}  # type: ignore
+    _defaults = {"periods": 1}
     func = M.diff
     enforce_metadata = True
     transform_divisions = False
@@ -3387,7 +3389,7 @@ class BFill(FFill):
 
 class Shift(MapOverlap):
     _parameters = ["frame", "periods", "freq"]
-    _defaults = {"periods": 1, "freq": None}  # type: ignore
+    _defaults = {"periods": 1, "freq": None}
 
     func = M.shift
     enforce_metadata = True
@@ -3451,7 +3453,7 @@ class ShiftIndex(Blockwise):
 
 class MaybeAlignPartitions(Expr):
     _projection_passthrough = False
-    _expr_cls: Any = None
+    _expr_cls: AnyType | None = None
 
     def _divisions(self):
         if {df.npartitions for df in self.args} == {1}:
@@ -3499,7 +3501,7 @@ class MaybeAlignPartitions(Expr):
                     "work."
                 )
 
-            from dask_expr._shuffle import RearrangeByColumn
+            from dask.dataframe.dask_expr._shuffle import RearrangeByColumn
 
             args = [
                 (
@@ -3611,7 +3613,7 @@ class AssignAlign(MaybeAlignPartitions):
 
 class MaskAlign(MaybeAlignPartitions):
     _parameters = ["frame", "cond", "other"]
-    _expr_cls = Mask
+    _expr_cls: AnyType = Mask
 
 
 class WhereAlign(MaskAlign):
@@ -3647,7 +3649,7 @@ class OpAlignPartitions(MaybeAlignPartitions):
         ):
             return self._op(self.frame, self.op, self.other, *self.operands[3:])
 
-        from dask_expr._repartition import RepartitionDivisions
+        from dask.dataframe.dask_expr._repartition import RepartitionDivisions
 
         frame = RepartitionDivisions(
             self.frame, new_divisions=self.divisions, force=True
@@ -4018,7 +4020,7 @@ def calc_divisions_for_align(*exprs, allow_shuffle=True):
 
 
 def maybe_align_partitions(*exprs, divisions):
-    from dask_expr._repartition import Repartition
+    from dask.dataframe.dask_expr._repartition import Repartition
 
     return [
         (
@@ -4097,7 +4099,7 @@ def _get_meta_map_partitions(args, dfs, func, kwargs, meta, parent_meta):
     return meta
 
 
-from dask_expr._reductions import (
+from dask.dataframe.dask_expr._reductions import (
     All,
     Any,
     ApplyConcatApply,
@@ -4117,5 +4119,5 @@ from dask_expr._reductions import (
     TreeReduce,
     Var,
 )
-from dask_expr.io import IO, BlockwiseIO, FromArray, FromPandas
-from dask_expr.io._delayed import FromDelayed
+from dask.dataframe.dask_expr.io import IO, BlockwiseIO, FromArray, FromPandas
+from dask.dataframe.dask_expr.io._delayed import FromDelayed

@@ -3,8 +3,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from dask_expr import from_pandas, read_parquet
-from dask_expr._shuffle import DiskShuffle, Shuffle
-from dask_expr.tests._util import _backend_library, assert_eq
+
+from dask.dataframe.dask_expr._shuffle import DiskShuffle, Shuffle
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from dask_expr import FrameBase
-
+from dask.dataframe.dask_expr import FrameBase
 from dask.dataframe.io.io import _df_to_bag
 from dask.tokenize import tokenize
 

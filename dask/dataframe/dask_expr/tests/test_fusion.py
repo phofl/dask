@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 from dask_expr import from_pandas, optimize
-from dask_expr.tests._util import _backend_library, assert_eq
 
 import dask.dataframe as dd
+from dask.dataframe.dask_expr.tests._util import _backend_library, assert_eq
 
 # Set DataFrame backend for this module
 pd = _backend_library()
