@@ -170,6 +170,7 @@ show_error_codes = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
+exclude = "dask/dataframe/dask_expr/*"
 
 [[tool.mypy.overrides]]
 
